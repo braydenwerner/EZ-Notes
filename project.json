@@ -1,0 +1,8 @@
+{
+  "type": "web",
+  "file": "index.html",
+  "description": "My desktop background of epicness 2.",
+  "general": {
+    "supportsaudioprocessing": true
+  }
+}
