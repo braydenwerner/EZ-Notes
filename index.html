@@ -90,10 +90,26 @@
             //  clear button
             ctx.fillStyle = "rgb(69, 69, 69)";
             ctx.fillRect(cW / 30, cH / 1.13, cW / 25, cH / 20);
+
+            //  draw date
+            const date = new Date();
+            ctx.font = "30px Arial";
+            ctx.clearRect(cW / 1.2, cH / 39, 200, 30);
+            ctx.fillStyle = "rgb(40,44,52)";
+            ctx.fillRect(cW / 1.2, cH / 39, 200, 35);
+            ctx.fillStyle = "WHITE";
+            ctx.fillText(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`, cW / 1.19, cH / 20);
         }
 
         const init = () => {
             setInterval(update, 1);
+            const date = new Date();
+
+            console.log(date.getHours());
+            console.log(date.getMinutes());
+            console.log(date.getSeconds());
+            console.log(date.getMilliseconds());
+
         }
         init();
 
