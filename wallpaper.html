@@ -42,7 +42,6 @@
         ctx.fillStyle = "rgb(40,44,52)";
         ctx.fillRect(0, 0, cW, cH);
 
-
         const update = () => {
             //  render board
             if (isMouseDown && Math.hypot(pos.x - previousPos.x, pos.y - previousPos.y) >= 5) {
@@ -92,30 +91,28 @@
             ctx.fillRect(cW / 30, cH / 1.13, cW / 25, cH / 20);
 
             //  draw date
-            const date = new Date();
-            ctx.font = "30px Arial";
-            ctx.clearRect(cW / 1.2, cH / 39, 200, 30);
-            ctx.fillStyle = "rgb(40,44,52)";
-            ctx.fillRect(cW / 1.2, cH / 39, 200, 35);
-            ctx.fillStyle = "WHITE";
-            ctx.fillText(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`, cW / 1.19, cH / 20);
+            // const date = new Date();
+            // ctx.font = "30px Arial";
+            // ctx.clearRect(cW / 1.19, cH / 39, 200, 30);
+            // ctx.fillStyle = "rgb(40,44,52)";
+            // ctx.fillRect(cW / 1.2, cH / 39, 200, 35);
+            // ctx.fillStyle = "WHITE";
+            // ctx.fillText(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`, cW / 1.19, cH / 20);
         }
 
         const init = () => {
-            setInterval(update, 1);
+            setInterval(update, 60);
             const date = new Date();
-
-            console.log(date.getHours());
-            console.log(date.getMinutes());
-            console.log(date.getSeconds());
-            console.log(date.getMilliseconds());
-
         }
         init();
 
         window.addEventListener('mousedown', (e) => {
             const x = e.clientX;
             const y = e.clientY;
+
+            //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
+            if (x < 1 || x >= cW - 1) return;
+
             isMouseDown = true;
             previousPos.x = x;
             previousPos.y = y;
