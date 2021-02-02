@@ -5,145 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WallPaper</title>
-    <style>
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            margin: 0px;
-            border: 0;
-            overflow: hidden;
-            display: block;
-        }
-    </style>
+    <link rel="stylesheet" href="./wallpaper.css">
 </head>
 
 <body>
-    <script>
-        /*
-            DESKTOP WALLPAPER WHITEBOARD
-        */
-        //  const FPS = 300;
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        document.body.appendChild(canvas);
-
-        const cW = canvas.width;
-        const cH = canvas.height;
-
-        let isMouseDown = false;
-        let color = "rgb(198, 120, 221)";
-        let pos = { x: 0, y: 0 };
-        let previousPos = { x: 0, y: 0 };
-
-        //  background
-        ctx.fillStyle = "rgb(40,44,52)";
-        ctx.fillRect(0, 0, cW, cH);
-
-        const update = () => {
-            //  render board
-            if (isMouseDown && Math.hypot(pos.x - previousPos.x, pos.y - previousPos.y) >= 5) {
-                ctx.lineWidth = 1;
-                ctx.strokeStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(previousPos.x, previousPos.y);
-                ctx.lineTo(pos.x, pos.y);
-                ctx.lineWidth = 3;
-                ctx.stroke();
-
-                previousPos.x = pos.x;
-                previousPos.y = pos.y;
-            }
-
-            //  render toolbar
-            ctx.fillStyle = "rgb(33,37,43)";
-            ctx.fillRect(cW / 50, cH / 23, cW / 15, cH / 1.1);
-
-            //  draw outline around selected color
-            ctx.fillStyle = "WHITE";
-            if (color === "rgb(198, 120, 221)") {
-                ctx.fillRect(cW / 30 - 2, cH / 18 - 2, cW / 25 + 4, cH / 20 + 4);
-            } else if (color === "rgb(224, 108, 117)") {
-                ctx.fillRect(cW / 30 - 2, cH / 9 - 2, cW / 25 + 4, cH / 20 + 4);
-            } else if (color === "rgb(0, 194, 182)") {
-                ctx.fillRect(cW / 30 - 2, cH / 6 - 2, cW / 25 + 4, cH / 20 + 4);
-            } else if (color === "rgb(152, 195, 121)") {
-                ctx.fillRect(cW / 30 - 2, cH / 4.5 - 2, cW / 25 + 4, cH / 20 + 4);
-            } else if (color === "rgb(229, 192, 123)") {
-                ctx.fillRect(cW / 30 - 2, cH / 3.6 - 2, cW / 25 + 4, cH / 20 + 4);
-            }
-
-            ctx.fillStyle = "rgb(198, 120, 221)";
-            ctx.fillRect(cW / 30, cH / 18, cW / 25, cH / 20);
-            ctx.fillStyle = "rgb(224, 108, 117)";
-            ctx.fillRect(cW / 30, cH / 9, cW / 25, cH / 20);
-            ctx.fillStyle = "rgb(0, 194, 182)";
-            ctx.fillRect(cW / 30, cH / 6, cW / 25, cH / 20);
-            ctx.fillStyle = "rgb(152, 195, 121)";
-            ctx.fillRect(cW / 30, cH / 4.5, cW / 25, cH / 20);
-            ctx.fillStyle = "rgb(229, 192, 123)";
-            ctx.fillRect(cW / 30, cH / 3.6, cW / 25, cH / 20);
-
-            //  clear button
-            ctx.fillStyle = "rgb(69, 69, 69)";
-            ctx.fillRect(cW / 30, cH / 1.13, cW / 25, cH / 20);
-
-            //  draw date
-            // const date = new Date();
-            // ctx.font = "30px Arial";
-            // ctx.clearRect(cW / 1.19, cH / 39, 200, 30);
-            // ctx.fillStyle = "rgb(40,44,52)";
-            // ctx.fillRect(cW / 1.2, cH / 39, 200, 35);
-            // ctx.fillStyle = "WHITE";
-            // ctx.fillText(`${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}:${date.getMilliseconds()}`, cW / 1.19, cH / 20);
-        }
-
-        const init = () => {
-            setInterval(update, 60);
-            const date = new Date();
-        }
-        init();
-
-        window.addEventListener('mousedown', (e) => {
-            const x = e.clientX;
-            const y = e.clientY;
-
-            //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
-            if (x < 1 || x >= cW - 1) return;
-
-            isMouseDown = true;
-            previousPos.x = x;
-            previousPos.y = y;
-
-            //  if user clicks on button
-            if (x >= cW / 30 && x <= cW / 50 + cW / 25 && y >= cH / 18 && y <= cH / 18 + cH / 20) {
-                color = "rgb(198, 120, 221)";
-            } else if (x >= cW / 30 && x <= cW / 30 + cW / 25 && y >= cH / 9 && y <= cH / 9 + cH / 20) {
-                color = "rgb(224, 108, 117)";
-            } else if (x >= cW / 30 && x <= cW / 30 + cW / 25 && y >= cH / 6 && y <= cH / 6 + cH / 20) {
-                color = "rgb(0, 194, 182)";
-            } else if (x >= cW / 30 && x <= cW / 30 + cW / 25 && y >= cH / 4.5 && y <= cH / 4.5 + cH / 20) {
-                color = "rgb(152, 195, 121)";
-            } else if (x >= cW / 30 && x <= cW / 30 + cW / 25 && y >= cH / 3.6 && y <= cH / 3.6 + cH / 20) {
-                color = "rgb(229, 192, 123)";
-            } else if (x >= cW / 30 && x <= cW / 30 + cW / 25 && y >= cH / 1.13 && y <= cH / 1.13 + cH / 20) {
-                ctx.fillStyle = "rgb(40,44,52)";
-                ctx.clearRect(0, 0, cW, cH);
-                ctx.fillRect(0, 0, cW, cH)
-            }
-        })
-
-        window.addEventListener('mousemove', (e) => {
-            pos.x = e.clientX;
-            pos.y = e.clientY;
-        })
-
-        window.addEventListener('mouseup', (e) => {
-            isMouseDown = false;
-        })
-    </script>
+    <div id="pen-color-container">
+        <button class="pen-color" id="pen-purple" />
+        <button class="pen-color" id="pen-red" />
+        <button class="pen-color" id="pen-blue" />
+        <button class="pen-color" id="pen-green" />
+        <button class="pen-color" id="pen-yellow" />
+        <button class="pen-color" id="pen-erase" />
+    </div>
+    <canvas id="canvas"></canvas>
+    <script defer src="./wallpaper.js" />
 </body>
 
 </html>
