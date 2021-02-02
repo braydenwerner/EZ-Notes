@@ -57,14 +57,14 @@
 
  #eraser {
      position: relative;
-     left: 52%;
+     left: 44%;
      width: 45px;
      background-color: rgb(158, 164, 175);
  }
 
  #pen-erase {
      position: relative;
-     left: 52%;
+     left: 44%;
      width: 55px;
      background-color: rgb(158, 164, 175);
  }

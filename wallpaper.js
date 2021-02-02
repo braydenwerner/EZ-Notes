@@ -104,7 +104,7 @@ window.addEventListener('mouseup', (e) => {
     ctx.beginPath()
     ctx.moveTo(e.clientX, e.clientY)
     ctx.lineTo(e.clientX + 2, e.clientY + 4)
-    ctx.lineWidth = 3
+    //ctx.lineWidth = 3
     ctx.stroke()
   }
 })
@@ -115,18 +115,23 @@ document.querySelectorAll('.pen-color').forEach((item) => {
     switch (item.id) {
       case 'pen-purple':
         color = 'rgb(198, 120, 221)'
+        ctx.lineWidth = 3
         break
       case 'pen-red':
         color = 'rgb(224, 108, 117)'
+        ctx.lineWidth = 3
         break
       case 'pen-blue':
         color = 'rgb(0, 194, 182)'
+        ctx.lineWidth = 3
         break
       case 'pen-green':
         color = 'rgb(152, 195, 121)'
+        ctx.lineWidth = 3
         break
       case 'pen-yellow':
         color = 'rgb(229, 192, 123)'
+        ctx.lineWidth = 3
         break
       case 'pen-erase':
         ctx.fillStyle = backgroundColor
@@ -135,6 +140,7 @@ document.querySelectorAll('.pen-color').forEach((item) => {
         break
       case 'eraser':
         color = 'rgb(40,44,52)'
+        ctx.lineWidth = 10
         break
     }
   })
