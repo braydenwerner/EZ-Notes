@@ -54,3 +54,17 @@
  #pen-yellow {
      background-color: rgb(229, 192, 123);
  }
+
+ #eraser {
+     position: relative;
+     left: 52%;
+     width: 45px;
+     background-color: rgb(158, 164, 175);
+ }
+
+ #pen-erase {
+     position: relative;
+     left: 52%;
+     width: 55px;
+     background-color: rgb(158, 164, 175);
+ }

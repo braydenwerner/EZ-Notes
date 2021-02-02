@@ -7,17 +7,24 @@ document.body.appendChild(canvas)
 const cW = canvas.width
 const cH = canvas.height
 
+//  for key binds
+let map = []
+
 let isMouseDown = false
 let color = 'rgb(198, 120, 221)'
 let pos = { x: 0, y: 0 }
 let previousPos = { x: 0, y: 0 }
 
 //  background
-ctx.fillStyle = 'rgb(40,44,52)'
+let backgroundColor = 'rgb(40,44,52)'
+ctx.fillStyle = backgroundColor
 ctx.fillRect(0, 0, cW, cH)
 
 const update = () => {
+  checkKeyBinds()
+
   //  render board
+
   if (
     isMouseDown &&
     Math.hypot(pos.x - previousPos.x, pos.y - previousPos.y) >= 5
@@ -48,6 +55,23 @@ const update = () => {
   // )
 }
 
+const checkKeyBinds = () => {
+  if (map.includes('ShiftLeft') && map.includes('Backspace')) {
+    map = []
+    ctx.fillStyle = backgroundColor
+    ctx.clearRect(0, 0, cW, cH)
+    ctx.fillRect(0, 0, cW, cH)
+  }
+
+  if (map.includes('ShiftLeft') && map.includes('KeyT')) {
+    map = []
+    backgroundColor = backgroundColor === 'WHITE' ? 'rgb(40,44,52)' : 'WHITE'
+    ctx.fillStyle = backgroundColor
+    ctx.clearRect(0, 0, cW, cH)
+    ctx.fillRect(0, 0, cW, cH)
+  }
+}
+
 const init = () => {
   setInterval(update, 0)
   const date = new Date()
@@ -73,13 +97,21 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('mouseup', (e) => {
   isMouseDown = false
+
+  //  draw a dot if the user simply clicks the screen
+  if (Math.hypot(pos.x - previousPos.x, pos.y - previousPos.y) < 3) {
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.moveTo(e.clientX, e.clientY)
+    ctx.lineTo(e.clientX + 2, e.clientY + 4)
+    ctx.lineWidth = 3
+    ctx.stroke()
+  }
 })
 
 //  add event listeners to pen color divs
 document.querySelectorAll('.pen-color').forEach((item) => {
-  console.log(item.id)
-  item.addEventListener('click', (event) => {
-    console.log(item.id)
+  item.addEventListener('click', () => {
     switch (item.id) {
       case 'pen-purple':
         color = 'rgb(198, 120, 221)'
@@ -97,14 +129,23 @@ document.querySelectorAll('.pen-color').forEach((item) => {
         color = 'rgb(229, 192, 123)'
         break
       case 'pen-erase':
-        ctx.fillStyle = 'rgb(40,44,52)'
+        ctx.fillStyle = backgroundColor
         ctx.clearRect(0, 0, cW, cH)
         ctx.fillRect(0, 0, cW, cH)
+        break
+      case 'eraser':
+        color = 'rgb(40,44,52)'
         break
     }
   })
 })
 
 //  hotkeys
-const map = []
-window.addEventListener('')
+window.addEventListener('keydown', (e) => {
+  if (!map.includes(e.code)) map.push(e.code)
+})
+
+window.addEventListener('keyup', (e) => {
+  map.filter((key) => key != e.code)
+  map = map.filter((key) => key != e.code)
+})
