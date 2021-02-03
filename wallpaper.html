@@ -10,13 +10,18 @@
 
 <body>
     <div id="pen-color-container">
-        <button class="pen-color" id="pen-purple" />
-        <button class="pen-color" id="pen-red" />
-        <button class="pen-color" id="pen-blue" />
-        <button class="pen-color" id="pen-green" />
-        <button class="pen-color" id="pen-yellow" />
-        <button class="pen-color" id="eraser" />
-        <button class="pen-color" id="pen-erase" />
+        <div id="pen-inner-col-1">
+            <button class="pen-color" id="pen-purple" />
+            <button class="pen-color" id="pen-red" />
+            <button class="pen-color" id="pen-blue" />
+            <button class="pen-color" id="pen-green" />
+            <button class="pen-color" id="pen-yellow" />
+        </div>
+        <div id="pen-inner-col-2">
+            <input id="input-color" type="color" value="#ff0000">
+            <button class="pen-color" id="eraser" />
+            <button class="pen-color" id="pen-erase" />
+        </div>
     </div>
     <canvas id="canvas"></canvas>
     <script defer src="./wallpaper.js"></script>

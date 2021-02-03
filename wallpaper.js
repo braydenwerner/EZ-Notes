@@ -1,3 +1,5 @@
+const inputColor = document.getElementById('input-color')
+
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 canvas.width = window.innerWidth
@@ -19,16 +21,16 @@ let previousPos = { x: 0, y: 0 }
 let backgroundColor = 'rgb(40,44,52)'
 ctx.fillStyle = backgroundColor
 ctx.fillRect(0, 0, cW, cH)
-ctx.lineWidth = 3;
+ctx.lineWidth = 3
 
 const update = () => {
   checkKeyBinds()
 
   //  render board
 
-  let diffx = pos.x - previousPos.x;
-  let diffy = pos.y - previousPos.y;
-  let diffsq = diffx*diffx + diffy*diffy;
+  let diffx = pos.x - previousPos.x
+  let diffy = pos.y - previousPos.y
+  let diffsq = diffx * diffx + diffy * diffy
 
   if (isMouseDown && diffsq >= 16) {
     ctx.strokeStyle = color
@@ -91,6 +93,11 @@ window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 })
 
+//  custom color input
+inputColor.addEventListener('input', () => {
+  color = inputColor.value
+})
+
 //  add event listeners to pen color divs
 document.querySelectorAll('.pen-color').forEach((item) => {
   item.addEventListener('click', () => {
@@ -119,7 +126,7 @@ document.querySelectorAll('.pen-color').forEach((item) => {
         color = 'rgb(40,44,52)'
         break
     }
-    ctx.lineWidth = (item.id == 'eraser') ? 15 : 3;
+    ctx.lineWidth = item.id == 'eraser' ? 15 : 3
   })
 })
 

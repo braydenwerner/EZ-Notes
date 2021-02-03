@@ -35,6 +35,11 @@
      transform: translateY(-3px);
  }
 
+ #pen-inner-col-1 {
+     display: flex;
+     width: 78%;
+ }
+
  #pen-purple {
      background-color: rgb(198, 120, 221);
  }
@@ -55,16 +60,26 @@
      background-color: rgb(229, 192, 123);
  }
 
+ #pen-inner-col-2 {
+     display: flex;
+     justify-content: flex-end;
+     align-items: center;
+ }
+
+ #input-color {
+     padding: 0;
+     border: none;
+     outline: none;
+     width: 32px;
+     height: 32px;
+ }
+
  #eraser {
-     position: relative;
-     left: 44%;
-     width: 45px;
-     background-color: rgb(158, 164, 175);
+     background: url('./double-sided-eraser.png');
+     background-repeat: no-repeat;
  }
 
  #pen-erase {
-     position: relative;
-     left: 44%;
-     width: 55px;
-     background-color: rgb(158, 164, 175);
+     background: url('./delete.png');
+     background-repeat: no-repeat;
  }
