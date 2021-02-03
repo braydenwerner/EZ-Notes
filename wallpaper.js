@@ -26,8 +26,6 @@ ctx.lineWidth = 3
 const update = () => {
   checkKeyBinds()
 
-  //  render board
-
   let diffx = pos.x - previousPos.x
   let diffy = pos.y - previousPos.y
   let diffsq = diffx * diffx + diffy * diffy
@@ -60,6 +58,16 @@ const checkKeyBinds = () => {
     ctx.fillRect(0, 0, cW, cH)
   }
 }
+
+//  hotkeys
+window.addEventListener('keydown', (e) => {
+  if (!map.includes(e.code)) map.push(e.code)
+})
+
+window.addEventListener('keyup', (e) => {
+  map.filter((key) => key != e.code)
+  map = map.filter((key) => key != e.code)
+})
 
 const init = () => {
   setInterval(update, 0)
@@ -126,16 +134,6 @@ document.querySelectorAll('.pen-color').forEach((item) => {
         color = 'rgb(40,44,52)'
         break
     }
-    ctx.lineWidth = item.id == 'eraser' ? 15 : 3
+    ctx.lineWidth = item.id === 'eraser' ? 15 : 3
   })
-})
-
-//  hotkeys
-window.addEventListener('keydown', (e) => {
-  if (!map.includes(e.code)) map.push(e.code)
-})
-
-window.addEventListener('keyup', (e) => {
-  map.filter((key) => key != e.code)
-  map = map.filter((key) => key != e.code)
 })
