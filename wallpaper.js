@@ -21,7 +21,7 @@ let previousPos = { x: 0, y: 0 }
 let backgroundColor = 'rgb(40,44,52)'
 ctx.fillStyle = backgroundColor
 ctx.fillRect(0, 0, cW, cH)
-ctx.lineWidth = 3
+ctx.lineWidth = 4;
 
 const update = () => {
   checkKeyBinds()
@@ -34,6 +34,8 @@ const update = () => {
 
   if (isMouseDown && diffsq >= 16) {
     ctx.strokeStyle = color
+    lineJoin = "round";
+    lineCap = "round";
     ctx.beginPath()
     ctx.moveTo(previousPos.x, previousPos.y)
     ctx.lineTo(pos.x, pos.y)
@@ -42,6 +44,16 @@ const update = () => {
     previousPos.x = pos.x
     previousPos.y = pos.y
   }
+}
+
+//slider
+let thickness = 4;
+var slider = document.getElementById("slider");
+
+
+slider.oninput = function() {
+  thickness = this.value;
+  ctx.lineWidth = thickness;
 }
 
 const checkKeyBinds = () => {
@@ -126,8 +138,8 @@ document.querySelectorAll('.pen-color').forEach((item) => {
         color = 'rgb(40,44,52)'
         break
     }
-    ctx.lineWidth = item.id == 'eraser' ? 15 : 3
-  })
+    ctx.lineWidth = item.id == 'eraser' ? 15 : thickness
+    })
 })
 
 //  hotkeys
