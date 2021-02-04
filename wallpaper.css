@@ -40,22 +40,6 @@
      width: 78%;
  }
 
- #pen-purple {
-     background-color: rgb(198, 120, 221);
- }
-
- #pen-red {
-     background-color: rgb(224, 108, 117);
- }
-
- #pen-green {
-     background-color: rgb(152, 195, 121);
- }
-
- #pen-blue {
-     background-color: rgb(0, 194, 182);
- }
-
  #pen-yellow {
      background-color: rgb(229, 192, 123);
  }
@@ -75,11 +59,11 @@
  }
 
  #eraser {
-     background: url('./double-sided-eraser.png');
+     background: url('./assets/eraser.png');
      background-repeat: no-repeat;
  }
 
  #pen-erase {
-     background: url('./delete.png');
+     background: url('./assets/delete.png');
      background-repeat: no-repeat;
  }
