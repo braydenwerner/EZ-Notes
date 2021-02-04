@@ -59,11 +59,13 @@
  }
 
  #eraser {
+     margin-top: 15px;
      background: url('./assets/eraser.png');
      background-repeat: no-repeat;
  }
 
- #pen-erase {
-     background: url('./assets/delete.png');
+ #reset {
+     margin-top: 2px;
+     background: url('./assets/reset.png');
      background-repeat: no-repeat;
  }
