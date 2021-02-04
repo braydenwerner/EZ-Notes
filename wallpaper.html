@@ -9,19 +9,21 @@
 </head>
 
 <body>
-    <div id="pen-color-container">
-        <div id="pen-inner-col-1">
-            <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple" />
-            <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red" />
-            <button style="background-color: rgb(0, 194, 182)" class="pen-color" id="pen-blue" />
-            <button style="background-color: rgb(152, 195, 121)" class="pen-color" id="pen-green" />
-            <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow" />
-        </div>
-        <div id="pen-inner-col-2">
-            <input type="range" min="3" max="10" value="4" class="slider" id="slider">
-            <input id="input-color" type="color" value="#ff0000">
-            <button class="pen-color" id="eraser" />
-            <button class="pen-color" id="reset" />
+    <div id="pen-outer-container">
+        <div id="pen-color-container">
+            <div id="pen-inner-col-1">
+                <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple" />
+                <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red" />
+                <button style="background-color: rgb(0, 194, 182)" class="pen-color" id="pen-blue" />
+                <button style="background-color: rgb(152, 195, 121)" class="pen-color" id="pen-green" />
+                <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow" />
+            </div>
+            <div id="pen-inner-col-2">
+                <input type="range" min="3" max="25" value="4" class="slider" id="slider">
+                <button class="pen-color" id="eraser" />
+                <button class="pen-color" id="undo" />
+                <button class="pen-color" id="reset" />
+            </div>
         </div>
     </div>
     <canvas id="canvas"></canvas>

@@ -7,6 +7,14 @@
      display: block;
  }
 
+ #pen-outer-container {
+     width: 100%;
+     height: 100px;
+     display: flex;
+     background-color: #222428;
+     position: absolute;
+ }
+
  #pen-color-container {
      display: flex;
      position: absolute;
@@ -17,7 +25,7 @@
      align-items: center;
      margin-top: 20px;
      width: 700px;
-     height: 50px;
+     height: 55px;
      background-color: rgb(73, 77, 85);
      border-radius: 4px;
  }
@@ -59,8 +67,15 @@
  }
 
  #eraser {
+     margin-right: 5px;
      margin-top: 15px;
      background: url('./assets/eraser.png');
+     background-repeat: no-repeat;
+ }
+
+ #undo {
+     margin-top: 2px;
+     background: url('./assets/undo.png');
      background-repeat: no-repeat;
  }
 
