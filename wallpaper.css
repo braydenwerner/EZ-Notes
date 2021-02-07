@@ -3,8 +3,7 @@
      height: 100%;
      margin: 0px;
      border: 0;
-     overflow: hidden;
-     display: block;
+     overflow: initial;
  }
 
  #pen-outer-container {

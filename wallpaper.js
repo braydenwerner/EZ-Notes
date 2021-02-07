@@ -9,8 +9,15 @@ canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 
 //  init values
-const cW = canvas.width
-const cH = canvas.height
+//  need base height to increment page height
+const baseHeight = canvas.height
+let cW = canvas.width
+let cH = canvas.height
+
+window.onresize = () => {
+  canvas.width = window.innerWidth
+  cW = canvas.width
+}
 
 const colors = {
   background: 'rgb(40,44,52)',
@@ -71,7 +78,13 @@ slider.addEventListener('input', () => {
   ctx.lineWidth = thickness
 })
 
-undo.addEventListener('click', () => {
+const handleNewPage = () => {
+  document.body.style.overflow = 'initial'
+  canvas.height += baseHeight
+  cH += baseHeight
+}
+
+const handleUndo = () => {
   canvasPointStates.pop()
 
   ctx.fillStyle = colors.background
@@ -95,7 +108,14 @@ undo.addEventListener('click', () => {
       ctx.stroke()
     }
   }
-})
+}
+
+const handleReset = () => {
+  canvasPointStates = []
+  ctx.fillStyle = colors.background
+  ctx.clearRect(0, 0, cW, cH)
+  ctx.fillRect(0, 0, cW, cH)
+}
 
 //  add event listeners and background colors to pen color divs
 document.querySelectorAll('.pen-color').forEach((colorButton) => {
@@ -144,19 +164,20 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
       case 'eraser':
         currentColor = colors.background
         break
+      case 'new-page':
+        handleNewPage()
+        break
+      case 'undo':
+        handleUndo()
+        break
       case 'reset':
-        canvasPointStates = []
-        ctx.fillStyle = colors.background
-        ctx.clearRect(0, 0, cW, cH)
-        ctx.fillRect(0, 0, cW, cH)
+        handleReset()
         break
     }
     ctx.lineWidth = colorButton.id === 'eraser' ? 18 : thickness
     previousButton = colorButton
   })
 })
-
-const resetColors = () => {}
 
 window.addEventListener('mousedown', (e) => {
   const x = e.clientX
