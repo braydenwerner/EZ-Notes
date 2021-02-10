@@ -51,6 +51,9 @@ let canvasPointStates = []
 //  create a smaller array to add to total canvas states array
 let currentPointState = []
 
+let usingSelectionTool = false
+let selectionStartPoint
+
 const update = () => {
   const diffx = pos.x - previousPos.x
   const diffy = pos.y - previousPos.y
@@ -117,6 +120,8 @@ const handleReset = () => {
   ctx.fillRect(0, 0, cW, cH)
 }
 
+const handleSelection = (firstPoint, secondPoint) => {}
+
 //  add event listeners and background colors to pen color divs
 document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
@@ -164,6 +169,9 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
       case 'eraser':
         currentColor = colors.background
         break
+      case 'selector':
+        usingSelectionTool = true
+        break
       case 'new-page':
         handleNewPage()
         break
@@ -182,6 +190,8 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
 window.addEventListener('mousedown', (e) => {
   const x = e.clientX
   const y = e.clientY
+
+  if (usingSelectionTool) selectionStartPoint = { x, y }
 
   currentPointState = []
   if (previousPos.x !== x && previousPos.y !== y && y > minY) {
@@ -209,6 +219,17 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('mouseup', (e) => {
   isMouseDown = false
+
+  if (usingSelectionTool) {
+    usingSelectionTool = false
+    handleSelection(
+      { ...selectionStartPoint },
+      {
+        x: e.clientX,
+        y: e.clientY
+      }
+    )
+  }
 
   //  add to total state and clear current point state
   if (e.clientY > minY) {
