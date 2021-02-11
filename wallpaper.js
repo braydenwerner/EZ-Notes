@@ -1,5 +1,6 @@
 const inputColor = document.getElementById('input-color')
-const slider = document.getElementById('slider')
+const sliderPen = document.getElementById('slider-pen')
+const sliderEraser = document.getElementById('slider-eraser')
 const undo = document.getElementById('undo')
 
 const canvas = document.getElementById('canvas')
@@ -8,17 +9,12 @@ canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 document.body.appendChild(canvas)
 
-//  init values
-//  need base height to increment page height
 const baseHeight = canvas.height
 let cW = canvas.width
 let cH = canvas.height
 
-window.onresize = () => {
-  canvas.width = window.innerWidth
-  cW = canvas.width
-}
-
+//  should not be able to draw in the toolbar
+const minY = 100
 const colors = {
   background: 'rgb(40,44,52)',
   purple: 'rgb(198,120,221)',
@@ -32,27 +28,34 @@ const colors = {
   yellow: 'rgb(229, 192, 123)',
   darkYellow: 'rgb(191, 154, 85)'
 }
-
 let currentColor = colors.purple
-//  array of html button elements, needed to manipulate toolbar colors
 let previousButton
-
 let thickness = 4
+let eraserThickness = 18
+
+let usingSelectorTool = false
+let usingEraser = false
 let isMouseDown = false
+
 let pos = { x: 0, y: 0 }
 let previousPos = { x: 0, y: 0 }
-
-//  should not be able to draw in the toolbar
-const minY = 100
+let selectorStartPoint
+let selectorEndPoint
 
 //  stores canvas states to undo button
 let canvasPointStates = []
-
 //  create a smaller array to add to total canvas states array
 let currentPointState = []
+//  an array containing the canvasPointStates for each page
+let pagePointStates = []
+let currentPageIndex = 0
+// an array of selected points
+let selectedPoints = []
 
-let usingSelectionTool = false
-let selectionStartPoint
+window.onresize = () => {
+  canvas.width = window.innerWidth
+  cW = canvas.width
+}
 
 const update = () => {
   const diffx = pos.x - previousPos.x
@@ -76,26 +79,85 @@ const update = () => {
   }
 }
 
-slider.addEventListener('input', () => {
-  thickness = slider.value
-  ctx.lineWidth = thickness
+sliderPen.addEventListener('input', () => {
+  thickness = sliderPen.value
+  if (!usingEraser) {
+    ctx.lineWidth = thickness
+  }
 })
 
-const handleNewPage = () => {
-  document.body.style.overflow = 'initial'
-  canvas.height += baseHeight
-  cH += baseHeight
+sliderEraser.addEventListener('input', () => {
+  eraserThickness = sliderEraser.value
+  if (usingEraser) {
+    ctx.lineWidth = eraserThickness
+  }
+})
+
+const handlePreviousPage = () => {
+  //  check if previous page exists
+  if (currentPageIndex === 0) return
+
+  clearPage()
+  saveCurrentPagePoints()
+
+  currentPageIndex -= 1
+
+  drawPoints(pagePointStates[currentPageIndex])
+  canvasPointStates = pagePointStates[currentPageIndex]
+}
+
+const handleNextPage = () => {
+  clearPage()
+  saveCurrentPagePoints()
+  currentPageIndex += 1
+
+  if (pagePointStates[currentPageIndex]) {
+    drawPoints(pagePointStates[currentPageIndex])
+    canvasPointStates = pagePointStates[currentPageIndex]
+  } else {
+    canvasPointStates = []
+  }
 }
 
 const handleUndo = () => {
   canvasPointStates.pop()
+  clearPage()
+  drawPoints(canvasPointStates)
+}
 
-  ctx.fillStyle = colors.background
-  ctx.clearRect(0, 0, cW, cH)
-  ctx.fillRect(0, 0, cW, cH)
+const handleSelector = () => {
+  //  get all points between top-left and bottom-right
+  let minX, maxX, minY, maxY
+  minX = Math.min(selectorStartPoint.x, selectorEndPoint.x)
+  maxX = Math.max(selectorStartPoint.x, selectorEndPoint.x)
+  minY = Math.min(selectorStartPoint.y, selectorEndPoint.y)
+  maxY = Math.max(selectorStartPoint.y, selectorEndPoint.y)
 
-  //  re-render canvas
+  //  save all points in the selected area
   for (let pointState of canvasPointStates) {
+    let tempSelectedLinePoints = []
+    for (let pointIdx = 0; pointIdx < pointState.length - 1; pointIdx++) {
+      if (
+        pointState[pointIdx].x >= minX &&
+        pointState[pointIdx].x <= maxX &&
+        pointState[pointIdx].y >= minY &&
+        pointState[pointIdx].y <= maxY
+      ) {
+        tempSelectedLinePoints.push(pointState[pointIdx])
+      }
+    }
+  }
+  selectedPoints.push([...tempSelectedLinePoints])
+}
+const saveCurrentPagePoints = () => {
+  console.log('saving')
+  console.log(pagePointStates[currentPageIndex])
+  console.log(canvasPointStates)
+  pagePointStates[currentPageIndex] = [...canvasPointStates]
+}
+
+const drawPoints = (cPoints) => {
+  for (let pointState of cPoints) {
     if (pointState.length > 0) {
       ctx.strokeStyle = pointState[0].currentColor
       ctx.lineWidth = pointState[0].thickness
@@ -113,18 +175,16 @@ const handleUndo = () => {
   }
 }
 
-const handleReset = () => {
-  canvasPointStates = []
+const clearPage = () => {
   ctx.fillStyle = colors.background
   ctx.clearRect(0, 0, cW, cH)
   ctx.fillRect(0, 0, cW, cH)
 }
 
-const handleSelection = (firstPoint, secondPoint) => {}
-
 //  add event listeners and background colors to pen color divs
 document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
+    usingEraser = false
     if (previousButton) {
       switch (previousButton.id) {
         case 'pen-purple':
@@ -167,22 +227,27 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
         currentColor = colors.yellow
         break
       case 'eraser':
+        usingEraser = true
         currentColor = colors.background
         break
       case 'selector':
-        usingSelectionTool = true
-        break
-      case 'new-page':
-        handleNewPage()
+        usingSelectorTool = true
         break
       case 'undo':
         handleUndo()
         break
       case 'reset':
-        handleReset()
+        canvasPointStates = []
+        clearPage()
+        break
+      case 'previous-page':
+        handlePreviousPage()
+        break
+      case 'next-page':
+        handleNextPage()
         break
     }
-    ctx.lineWidth = colorButton.id === 'eraser' ? 18 : thickness
+    ctx.lineWidth = colorButton.id === 'eraser' ? eraserThickness : thickness
     previousButton = colorButton
   })
 })
@@ -190,8 +255,6 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
 window.addEventListener('mousedown', (e) => {
   const x = e.clientX
   const y = e.clientY
-
-  if (usingSelectionTool) selectionStartPoint = { x, y }
 
   currentPointState = []
   if (previousPos.x !== x && previousPos.y !== y && y > minY) {
@@ -204,6 +267,11 @@ window.addEventListener('mousedown', (e) => {
   isMouseDown = true
   previousPos.x = x
   previousPos.y = y
+
+  //  handle selector tool
+  if (usingSelectorTool) {
+    selectorStartPoint = { x, y }
+  }
 
   ctx.strokeStyle = currentColor
   ctx.beginPath()
@@ -220,22 +288,17 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 
-  if (usingSelectionTool) {
-    usingSelectionTool = false
-    handleSelection(
-      { ...selectionStartPoint },
-      {
-        x: e.clientX,
-        y: e.clientY
-      }
-    )
-  }
-
   //  add to total state and clear current point state
   if (e.clientY > minY) {
     canvasPointStates.push([...currentPointState])
   }
   currentPointState = []
+
+  //  handle selector tool
+  if (usingSelectorTool) {
+    selectorEndPoint = { x, y }
+    handleSelector()
+  }
 })
 
 const init = () => {

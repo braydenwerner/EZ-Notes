@@ -19,9 +19,13 @@
                 <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow" />
             </div>
             <div id="pen-inner-col-2">
-                <input type="range" min="3" max="25" value="4" class="slider" id="slider">
+                <div id="slider-container">
+                    <input type="range" min="3" max="25" value="4" class="slider" id="slider-pen">
+                    <input type="range" min="18" max="100" value="18" class="slider" id="slider-eraser">
+                </div>
+                <button class="pen-color" id="previous-page" />
+                <button class="pen-color" id="next-page" />
                 <button class="pen-color" id="selector" />
-                <button class="pen-color" id="new-page" />
                 <button class="pen-color" id="eraser" />
                 <button class="pen-color" id="undo" />
                 <button class="pen-color" id="reset" />

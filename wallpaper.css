@@ -57,6 +57,12 @@
      align-items: center;
  }
 
+ #slider-container {
+     position: relative;
+     width: 100px;
+     right: 20%;
+ }
+
  #input-color {
      padding: 0;
      border: none;
