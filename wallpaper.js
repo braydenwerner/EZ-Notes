@@ -36,11 +36,14 @@ let eraserThickness = 18
 let usingSelectorTool = false
 let usingEraser = false
 let isMouseDown = false
+let movingSelectedArea = false
+let hasMovedSelectedArea = false
 
 let pos = { x: 0, y: 0 }
 let previousPos = { x: 0, y: 0 }
 let selectorStartPoint
 let selectorEndPoint
+let lastSelectedPoints
 
 //  stores canvas states to undo button
 let canvasPointStates = []
@@ -49,8 +52,13 @@ let currentPointState = []
 //  an array containing the canvasPointStates for each page
 let pagePointStates = []
 let currentPageIndex = 0
-// an array of selected points
-let selectedPoints = []
+// an array of selected lines
+let selectedLines = []
+//  key-value array: key = index of initial pos in canvasPointStates,
+//  value is index of new position in canvasPointStates after selected and moved
+let movedLinesMapping = []
+
+let minSelectedX, maxSelectedX, minSelectedY, maxSelectedY
 
 window.onresize = () => {
   canvas.width = window.innerWidth
@@ -98,7 +106,7 @@ const handlePreviousPage = () => {
   if (currentPageIndex === 0) return
 
   clearPage()
-  saveCurrentPagePoints()
+  pagePointStates[currentPageIndex] = [...canvasPointStates]
 
   currentPageIndex -= 1
 
@@ -108,7 +116,7 @@ const handlePreviousPage = () => {
 
 const handleNextPage = () => {
   clearPage()
-  saveCurrentPagePoints()
+  pagePointStates[currentPageIndex] = [...canvasPointStates]
   currentPageIndex += 1
 
   if (pagePointStates[currentPageIndex]) {
@@ -120,56 +128,90 @@ const handleNextPage = () => {
 }
 
 const handleUndo = () => {
+  //  if undoing a select move, have to update movedLinesMapping accordingly
+  //  and allow original shape to be reverted
+  for (let lineMap of movedLinesMapping) {
+    if (lineMap.movedLine === canvasPointStates.length - 1) {
+      //  {2,5}
+      movedLinesMapping.pop()
+    }
+    // console.log(lineMap)
+    // if (lineMap.movedLine === canvasPointStates.length) {
+    //   //  delete key-value in movedLinesMapping
+
+    //   movedLinesMapping.pop()
+    // }
+  }
   canvasPointStates.pop()
+
   clearPage()
   drawPoints(canvasPointStates)
 }
 
 const handleSelector = () => {
   //  get all points between top-left and bottom-right
-  let minX, maxX, minY, maxY
-  minX = Math.min(selectorStartPoint.x, selectorEndPoint.x)
-  maxX = Math.max(selectorStartPoint.x, selectorEndPoint.x)
-  minY = Math.min(selectorStartPoint.y, selectorEndPoint.y)
-  maxY = Math.max(selectorStartPoint.y, selectorEndPoint.y)
+  minSelectedX = Math.min(selectorStartPoint.x, selectorEndPoint.x)
+  maxSelectedX = Math.max(selectorStartPoint.x, selectorEndPoint.x)
+  minSelectedY = Math.min(selectorStartPoint.y, selectorEndPoint.y)
+  maxSelectedY = Math.max(selectorStartPoint.y, selectorEndPoint.y)
+
+  if (selectedLines.length == 0) {
+    ctx.fillStyle = 'RED'
+    ctx.rect(
+      minSelectedX,
+      minSelectedY,
+      maxSelectedX - minSelectedX,
+      maxSelectedY - minSelectedY
+    )
+    ctx.stroke()
+  }
 
   //  save all points in the selected area
-  for (let pointState of canvasPointStates) {
-    let tempSelectedLinePoints = []
-    for (let pointIdx = 0; pointIdx < pointState.length - 1; pointIdx++) {
+  let numSelectionsCount = 0
+  for (let i = 0; i < canvasPointStates.length; i++) {
+    for (let point of canvasPointStates[i]) {
       if (
-        pointState[pointIdx].x >= minX &&
-        pointState[pointIdx].x <= maxX &&
-        pointState[pointIdx].y >= minY &&
-        pointState[pointIdx].y <= maxY
+        point.x >= minSelectedX &&
+        point.x <= maxSelectedX &&
+        point.y >= minSelectedY &&
+        point.y <= maxSelectedY
       ) {
-        tempSelectedLinePoints.push(pointState[pointIdx])
+        //  if the line contains a point in selected region, add it to selectedLines array
+        selectedLines.push([...canvasPointStates[i]])
+        movedLinesMapping.push({
+          originalLine: i,
+          movedLine: canvasPointStates.length + numSelectionsCount
+        })
+        numSelectionsCount++
+        break //for now if any pixel is touching selected area
       }
     }
   }
-  selectedPoints.push([...tempSelectedLinePoints])
-}
-const saveCurrentPagePoints = () => {
-  console.log('saving')
-  console.log(pagePointStates[currentPageIndex])
-  console.log(canvasPointStates)
-  pagePointStates[currentPageIndex] = [...canvasPointStates]
 }
 
 const drawPoints = (cPoints) => {
-  for (let pointState of cPoints) {
-    if (pointState.length > 0) {
-      ctx.strokeStyle = pointState[0].currentColor
-      ctx.lineWidth = pointState[0].thickness
+  for (let i = 0; i < cPoints.length; i++) {
+    if (cPoints[i].length > 0) {
+      ctx.strokeStyle = cPoints[i][0].currentColor
+      ctx.lineWidth = cPoints[i][0].thickness
     }
 
-    for (let pointIdx = 0; pointIdx < pointState.length - 1; pointIdx++) {
+    //  if the line was selected and moved, don't draw the original
+    let lineMoved = false
+    movedLinesMapping = []
+    /*
+    for (let lineMap of movedLinesMapping) {
+      if (lineMap.originalLine === i) lineMoved = true
+    }
+    if (lineMoved) continue
+    */
+    for (let pointIdx = 0; pointIdx < cPoints[i].length - 1; pointIdx++) {
       //  connect the two points
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
       ctx.beginPath()
-      ctx.moveTo(pointState[pointIdx].x, pointState[pointIdx].y)
-      ctx.lineTo(pointState[pointIdx + 1].x, pointState[pointIdx + 1].y)
+      ctx.moveTo(cPoints[i][pointIdx].x, cPoints[i][pointIdx].y)
+      ctx.lineTo(cPoints[i][pointIdx + 1].x, cPoints[i][pointIdx + 1].y)
       ctx.stroke()
     }
   }
@@ -185,6 +227,7 @@ const clearPage = () => {
 document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
     usingEraser = false
+    usingSelectorTool = false
     if (previousButton) {
       switch (previousButton.id) {
         case 'pen-purple':
@@ -256,47 +299,97 @@ window.addEventListener('mousedown', (e) => {
   const x = e.clientX
   const y = e.clientY
 
-  currentPointState = []
-  if (previousPos.x !== x && previousPos.y !== y && y > minY) {
-    currentPointState.push({ x, y, currentColor, thickness })
-  }
+  if (!usingSelectorTool) {
+    currentPointState = []
+    if (previousPos.x !== x && previousPos.y !== y && y > minY) {
+      currentPointState.push({ x, y, currentColor, thickness })
+    }
 
-  //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
-  if (x < 1 || x >= cW - 1) return
+    //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
+    if (x < 1 || x >= cW - 1) return
 
-  isMouseDown = true
-  previousPos.x = x
-  previousPos.y = y
+    isMouseDown = true
+    previousPos.x = x
+    previousPos.y = y
 
-  //  handle selector tool
-  if (usingSelectorTool) {
+    ctx.strokeStyle = currentColor
+    ctx.beginPath()
+    ctx.moveTo(e.clientX - 1, e.clientY - 1)
+    ctx.lineTo(e.clientX + 1, e.clientY + 1)
+    ctx.stroke()
+  } else {
     selectorStartPoint = { x, y }
+    lastSelectedPoints = {
+      x: selectorStartPoint.x,
+      y: selectorStartPoint.y
+    }
   }
 
-  ctx.strokeStyle = currentColor
-  ctx.beginPath()
-  ctx.moveTo(e.clientX - 1, e.clientY - 1)
-  ctx.lineTo(e.clientX + 1, e.clientY + 1)
-  ctx.stroke()
+  //  if a grid has been selected and user clicks it
+  if (
+    selectedLines.length > 0 &&
+    x >= minSelectedX &&
+    x <= maxSelectedX &&
+    y >= minSelectedY &&
+    y <= maxSelectedY
+  ) {
+    movingSelectedArea = true
+  } else {
+    selectedLines = []
+  }
 })
 
 window.addEventListener('mousemove', (e) => {
-  pos.x = e.clientX
-  pos.y = e.clientY
+  if (!usingSelectorTool) {
+    pos.x = e.clientX
+    pos.y = e.clientY
+  }
+
+  if (movingSelectedArea) {
+    let distX = e.clientX - lastSelectedPoints.x
+    let distY = e.clientY - lastSelectedPoints.y
+    hasMovedSelectedArea = true
+
+    lastSelectedPoints.x = e.clientX
+    lastSelectedPoints.y = e.clientY
+
+    //  update selectedLines points
+    const tempLines = [...canvasPointStates]
+    for (let line of selectedLines) {
+      for (let point of line) {
+        point.x += distX
+        point.y += distY
+      }
+      tempLines.push(line)
+    }
+
+    clearPage()
+    drawPoints(tempLines)
+  }
 })
 
 window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 
-  //  add to total state and clear current point state
-  if (e.clientY > minY) {
-    canvasPointStates.push([...currentPointState])
-  }
-  currentPointState = []
+  if (hasMovedSelectedArea && movingSelectedArea) {
+    for (let pointState of selectedLines) {
+      canvasPointStates.push(pointState)
+    }
+    clearPage()
+    drawPoints(canvasPointStates)
 
-  //  handle selector tool
-  if (usingSelectorTool) {
-    selectorEndPoint = { x, y }
+    movingSelectedArea = false
+    hasMovedSelectedArea = false
+  }
+
+  if (!usingSelectorTool) {
+    //  add to total state and clear current point state
+    if (e.clientY > minY) {
+      canvasPointStates.push([...currentPointState])
+    }
+    currentPointState = []
+  } else {
+    selectorEndPoint = { x: e.clientX, y: e.clientY }
     handleSelector()
   }
 })
