@@ -1,3 +1,4 @@
+const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
 const sliderEraser = document.getElementById('slider-eraser')
@@ -60,6 +61,12 @@ let movedLinesMapping = []
 
 let minSelectedX, maxSelectedX, minSelectedY, maxSelectedY
 
+//  custom dynamic eraser cursor
+let cursorEraserWidth = eraserThickness
+let cursorEraserHeight = eraserThickness
+customEraserCursor.style.width = cursorEraserWidth
+customEraserCursor.style.height = cursorEraserHeight
+
 window.onresize = () => {
   canvas.width = window.innerWidth
   cW = canvas.width
@@ -99,6 +106,7 @@ sliderEraser.addEventListener('input', () => {
   if (usingEraser) {
     ctx.lineWidth = eraserThickness
   }
+  handleEraserCursorThickness()
 })
 
 const handlePreviousPage = () => {
@@ -178,7 +186,8 @@ const handleSelector = () => {
         point.y <= maxSelectedY
       ) {
         //  if the line contains a point in selected region, add it to selectedLines array
-        //  we have to check if canvasPointStates[i] is already in selectedLines
+        //  we have to check if selectedLines already contains canvasPointStates[i] or we get a bug
+        //  in which there are duplicated lines which causes selectedLines to double in size upon each selection
         if (
           !selectedLines.some(
             (line) =>
@@ -197,6 +206,13 @@ const handleSelector = () => {
       }
     }
   }
+}
+
+const handleEraserCursorThickness = () => {
+  cursorEraserWidth = eraserThickness
+  cursorEraserHeight = eraserThickness
+  customEraserCursor.style.width = eraserThickness
+  customEraserCursor.style.height = eraserThickness
 }
 
 const drawPoints = (cPoints) => {
@@ -238,6 +254,8 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
     usingEraser = false
     usingSelectorTool = false
+    customEraserCursor.style.display = 'none'
+
     if (previousButton) {
       switch (previousButton.id) {
         case 'pen-purple':
@@ -282,6 +300,8 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
       case 'eraser':
         usingEraser = true
         currentColor = colors.background
+        customEraserCursor.style.display = 'initial'
+        handleEraserCursorThickness()
         break
       case 'selector':
         usingSelectorTool = true
@@ -348,18 +368,24 @@ window.addEventListener('mousedown', (e) => {
 })
 
 window.addEventListener('mousemove', (e) => {
+  const x = e.clientX
+  const y = e.clientY
+
+  customEraserCursor.style.top = y - cursorEraserHeight / 2
+  customEraserCursor.style.left = x - cursorEraserWidth / 2
+
   if (!usingSelectorTool) {
-    pos.x = e.clientX
-    pos.y = e.clientY
+    pos.x = x
+    pos.y = y
   }
 
   if (movingSelectedArea) {
-    const distX = e.clientX - lastSelectedPoints.x
-    const distY = e.clientY - lastSelectedPoints.y
+    const distX = x - lastSelectedPoints.x
+    const distY = y - lastSelectedPoints.y
     hasMovedSelectedArea = true
 
-    lastSelectedPoints.x = e.clientX
-    lastSelectedPoints.y = e.clientY
+    lastSelectedPoints.x = x
+    lastSelectedPoints.y = y
 
     //  update selectedLines points
     const tempLines = [...canvasPointStates]

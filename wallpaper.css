@@ -3,7 +3,16 @@
      height: 100%;
      margin: 0px;
      border: 0;
-     overflow: initial;
+     overflow: hidden;
+ }
+
+ #custom-eraser-cursor {
+     position: absolute;
+     z-index: 51;
+     pointer-events: none;
+     width: 35px;
+     height: 35px;
+     display: none;
  }
 
  #pen-outer-container {
@@ -47,10 +56,6 @@
      width: 78%;
  }
 
- #pen-yellow {
-     background-color: rgb(229, 192, 123);
- }
-
  #pen-inner-col-2 {
      display: flex;
      justify-content: flex-end;
@@ -60,7 +65,7 @@
  #slider-container {
      position: relative;
      width: 100px;
-     right: 20%;
+     right: 8%;
  }
 
  #input-color {
