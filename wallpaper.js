@@ -107,7 +107,6 @@ const handlePreviousPage = () => {
 
   clearPage()
   pagePointStates[currentPageIndex] = [...canvasPointStates]
-
   currentPageIndex -= 1
 
   drawPoints(pagePointStates[currentPageIndex])
@@ -130,18 +129,19 @@ const handleNextPage = () => {
 const handleUndo = () => {
   //  if undoing a select move, have to update movedLinesMapping accordingly
   //  and allow original shape to be reverted
-  for (let lineMap of movedLinesMapping) {
-    if (lineMap.movedLine === canvasPointStates.length - 1) {
-      //  {2,5}
-      movedLinesMapping.pop()
-    }
-    // console.log(lineMap)
-    // if (lineMap.movedLine === canvasPointStates.length) {
-    //   //  delete key-value in movedLinesMapping
+  // for (let lineMap of movedLinesMapping) {
+  //   if (lineMap.movedLine === canvasPointStates.length - 1) {
+  //     //  {2,5}
+  //     movedLinesMapping.pop()
+  //   }
+  //   // console.log(lineMap)
+  //   // if (lineMap.movedLine === canvasPointStates.length) {
+  //   //   //  delete key-value in movedLinesMapping
 
-    //   movedLinesMapping.pop()
-    // }
-  }
+  //   //   movedLinesMapping.pop()
+  //   // }
+  // }
+
   canvasPointStates.pop()
 
   clearPage()
@@ -168,6 +168,7 @@ const handleSelector = () => {
 
   //  save all points in the selected area
   let numSelectionsCount = 0
+  //  console.log(canvasPointStates.length)
   for (let i = 0; i < canvasPointStates.length; i++) {
     for (let point of canvasPointStates[i]) {
       if (
@@ -177,7 +178,16 @@ const handleSelector = () => {
         point.y <= maxSelectedY
       ) {
         //  if the line contains a point in selected region, add it to selectedLines array
-        selectedLines.push([...canvasPointStates[i]])
+        //  we have to check if canvasPointStates[i] is already in selectedLines
+        if (
+          !selectedLines.some(
+            (line) =>
+              JSON.stringify(line) === JSON.stringify(canvasPointStates[i])
+          )
+        ) {
+          selectedLines.push([...canvasPointStates[i]])
+        }
+        console.log(selectedLines)
         movedLinesMapping.push({
           originalLine: i,
           movedLine: canvasPointStates.length + numSelectionsCount
@@ -319,10 +329,7 @@ window.addEventListener('mousedown', (e) => {
     ctx.stroke()
   } else {
     selectorStartPoint = { x, y }
-    lastSelectedPoints = {
-      x: selectorStartPoint.x,
-      y: selectorStartPoint.y
-    }
+    lastSelectedPoints = { x, y }
   }
 
   //  if a grid has been selected and user clicks it
@@ -335,6 +342,7 @@ window.addEventListener('mousedown', (e) => {
   ) {
     movingSelectedArea = true
   } else {
+    console.log('clearing selected line')
     selectedLines = []
   }
 })
@@ -346,8 +354,8 @@ window.addEventListener('mousemove', (e) => {
   }
 
   if (movingSelectedArea) {
-    let distX = e.clientX - lastSelectedPoints.x
-    let distY = e.clientY - lastSelectedPoints.y
+    const distX = e.clientX - lastSelectedPoints.x
+    const distY = e.clientY - lastSelectedPoints.y
     hasMovedSelectedArea = true
 
     lastSelectedPoints.x = e.clientX
@@ -355,6 +363,7 @@ window.addEventListener('mousemove', (e) => {
 
     //  update selectedLines points
     const tempLines = [...canvasPointStates]
+    console.log(selectedLines.length)
     for (let line of selectedLines) {
       for (let point of line) {
         point.x += distX
@@ -373,6 +382,7 @@ window.addEventListener('mouseup', (e) => {
 
   if (hasMovedSelectedArea && movingSelectedArea) {
     for (let pointState of selectedLines) {
+      console.log('pushing new line to canvasPointStates')
       canvasPointStates.push(pointState)
     }
     clearPage()
