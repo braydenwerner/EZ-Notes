@@ -1,3 +1,4 @@
+const customPenCursor = document.getElementById('custom-pen-cursor')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
@@ -64,8 +65,14 @@ let minSelectedX, maxSelectedX, minSelectedY, maxSelectedY
 //  custom dynamic eraser cursor
 let cursorEraserWidth = eraserThickness
 let cursorEraserHeight = eraserThickness
-customEraserCursor.style.width = cursorEraserWidth
-customEraserCursor.style.height = cursorEraserHeight
+customEraserCursor.style.width = eraserThickness
+customEraserCursor.style.height = eraserThickness
+
+//  custom dynamic pen cursor
+let cursorPenWidth = thickness
+let cursorPenHeight = thickness
+customPenCursor.style.width = thickness
+customPenCursor.style.height = thickness
 
 window.onresize = () => {
   canvas.width = window.innerWidth
@@ -99,6 +106,7 @@ sliderPen.addEventListener('input', () => {
   if (!usingEraser) {
     ctx.lineWidth = thickness
   }
+  handlePenCursorThickness()
 })
 
 sliderEraser.addEventListener('input', () => {
@@ -215,6 +223,14 @@ const handleEraserCursorThickness = () => {
   customEraserCursor.style.height = eraserThickness
 }
 
+const handlePenCursorThickness = () => {
+  console.log('reached')
+  cursorPenWidth = thickness
+  cursorPenHeight = thickness
+  customPenCursor.style.width = thickness
+  customPenCursor.style.width = thickness
+}
+
 const drawPoints = (cPoints) => {
   for (let i = 0; i < cPoints.length; i++) {
     if (cPoints[i].length > 0) {
@@ -254,6 +270,9 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
     usingEraser = false
     usingSelectorTool = false
+
+    customPenCursor.style.display = 'initial'
+    handlePenCursorThickness()
     customEraserCursor.style.display = 'none'
 
     if (previousButton) {
@@ -301,6 +320,7 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
         usingEraser = true
         currentColor = colors.background
         customEraserCursor.style.display = 'initial'
+        customPenCursor.style.display = 'none'
         handleEraserCursorThickness()
         break
       case 'selector':
@@ -344,8 +364,8 @@ window.addEventListener('mousedown', (e) => {
 
     ctx.strokeStyle = currentColor
     ctx.beginPath()
-    ctx.moveTo(e.clientX - 1, e.clientY - 1)
-    ctx.lineTo(e.clientX + 1, e.clientY + 1)
+    ctx.moveTo(x - 1, y - 1)
+    ctx.lineTo(x + 1, y + 1)
     ctx.stroke()
   } else {
     selectorStartPoint = { x, y }
@@ -373,6 +393,12 @@ window.addEventListener('mousemove', (e) => {
 
   customEraserCursor.style.top = y - cursorEraserHeight / 2
   customEraserCursor.style.left = x - cursorEraserWidth / 2
+
+  console.log(y - cursorPenHeight)
+  customPenCursor.style.top = y - cursorPenHeight / 2
+  customPenCursor.style.left = x - cursorPenWidth / 2
+
+  console.log(customPenCursor.style.top)
 
   if (!usingSelectorTool) {
     pos.x = x

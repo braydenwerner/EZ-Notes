@@ -6,13 +6,17 @@
      overflow: hidden;
  }
 
+ #custom-pen-cursor {
+     position: absolute;
+     pointer-events: none;
+     z-index: 10;
+ }
+
  #custom-eraser-cursor {
      position: absolute;
-     z-index: 51;
      pointer-events: none;
-     width: 35px;
-     height: 35px;
      display: none;
+     z-index: 10;
  }
 
  #pen-outer-container {
