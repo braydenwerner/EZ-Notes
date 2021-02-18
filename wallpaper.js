@@ -90,8 +90,19 @@ const update = () => {
   handleClock()
 
   if (isMouseDown && diffsq >= 16) {
-    if (pos.y > minY)
-      currentPointState.push({ x: pos.x, y: pos.y, currentColor, thickness })
+    if (pos.y > minY) {
+      console.log(usingEraser)
+      if (usingEraser) {
+        currentPointState.push({
+          x: pos.x,
+          y: pos.y,
+          currentColor,
+          thick: eraserThickness
+        })
+      } else {
+        currentPointState.push({ x: pos.x, y: pos.y, currentColor, thickness })
+      }
+    }
 
     ctx.strokeStyle = currentColor
     ctx.lineJoin = 'round'
@@ -245,7 +256,7 @@ const drawPoints = (cPoints) => {
   for (let i = 0; i < cPoints.length; i++) {
     if (cPoints[i].length > 0) {
       ctx.strokeStyle = cPoints[i][0].currentColor
-      ctx.lineWidth = cPoints[i][0].thickness
+      ctx.lineWidth = cPoints[i][0].thick
     }
 
     //  if the line was selected and moved, don't draw the original
@@ -267,7 +278,12 @@ const drawPoints = (cPoints) => {
       ctx.stroke()
     }
   }
-  ctx.lineWidth = thickness
+  //  drawPoints changes lineWidth to previous point, have to change thickness back to current point
+  if (usingEraser) {
+    ctx.lineWidth = eraserThickness
+  } else {
+    ctx.lineWidth = thickness
+  }
 }
 
 const clearPage = () => {
@@ -365,14 +381,26 @@ window.addEventListener('mousedown', (e) => {
   if (selectorStartPoint) {
     clearPage()
     drawPoints(canvasPointStates)
-    //  drawPoints changes lineWidth to previous point, have to change thickness back to current point
-    ctx.lineWidth = thickness
   }
 
   if (!usingSelectorTool) {
     currentPointState = []
     if (previousPos.x !== x && previousPos.y !== y && y > minY) {
-      currentPointState.push({ x, y, currentColor, thickness })
+      if (usingEraser) {
+        currentPointState.push({
+          x: pos.x,
+          y: pos.y,
+          currentColor,
+          thick: eraserThickness
+        })
+      } else {
+        currentPointState.push({
+          x: pos.x,
+          y: pos.y,
+          currentColor,
+          thick: thickness
+        })
+      }
     }
 
     //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
@@ -386,7 +414,12 @@ window.addEventListener('mousedown', (e) => {
     ctx.beginPath()
     ctx.moveTo(x - 1, y - 1)
     ctx.lineTo(x + 1, y + 1)
-    currentPointState.push({ x: x - 1, y: y - 1, currentColor, thickness })
+    currentPointState.push({
+      x: x - 1,
+      y: y - 1,
+      currentColor,
+      thick: thickness
+    })
     ctx.stroke()
   } else {
     selectorStartPoint = { x, y }
