@@ -2,17 +2,16 @@ const customPenCursor = document.getElementById('custom-pen-cursor')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const date = document.getElementById('date')
 const time = document.getElementById('time')
+const pageNumber = document.getElementById('page-number')
 const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
 const sliderEraser = document.getElementById('slider-eraser')
 const undo = document.getElementById('undo')
-
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
+
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
-document.body.appendChild(canvas)
-
 const baseHeight = canvas.height
 let cW = canvas.width
 let cH = canvas.height
@@ -34,9 +33,11 @@ const colors = {
 }
 let currentColor = colors.purple
 let previousButton
-let thickness = 4
-let eraserThickness = 18
-let selectorDelay = 0
+let thickness = sliderPen.value
+let eraserThickness = sliderEraser.value
+let currentPageIndex = 0
+let currentPageNum = 1
+let totalPages = 1
 
 let usingSelectorTool = false
 let usingEraser = false
@@ -56,7 +57,6 @@ let canvasPointStates = []
 let currentPointState = []
 //  an array containing the canvasPointStates for each page
 let pagePointStates = []
-let currentPageIndex = 0
 // an array of selected lines
 let selectedLines = []
 //  key-value array: key = index of initial pos in canvasPointStates,
@@ -150,23 +150,28 @@ const handlePreviousPage = () => {
 
   clearPage()
   pagePointStates[currentPageIndex] = [...canvasPointStates]
-  currentPageIndex -= 1
+  currentPageIndex--
 
   drawPoints(pagePointStates[currentPageIndex])
   canvasPointStates = pagePointStates[currentPageIndex]
+  currentPageNum--
+  pageNumber.innerText = `${currentPageNum} of ${totalPages}`
 }
 
 const handleNextPage = () => {
   clearPage()
   pagePointStates[currentPageIndex] = [...canvasPointStates]
-  currentPageIndex += 1
+  currentPageIndex++
 
   if (pagePointStates[currentPageIndex]) {
     drawPoints(pagePointStates[currentPageIndex])
     canvasPointStates = pagePointStates[currentPageIndex]
   } else {
+    totalPages++
     canvasPointStates = []
   }
+  currentPageNum++
+  pageNumber.innerText = `${currentPageNum} of ${totalPages}`
 }
 
 const handleUndo = () => {
@@ -419,8 +424,7 @@ window.addEventListener('mousemove', (e) => {
     selectorStartPoint &&
     usingSelectorTool &&
     isMouseDown &&
-    canvasPointStates.length > 0 &&
-    selectorDelay % 20 === 0
+    canvasPointStates.length > 0
   ) {
     //  clear the canvas and redraw last state (removed the previous selector outline)
     clearPage()
@@ -437,7 +441,6 @@ window.addEventListener('mousemove', (e) => {
     ctx.stroke()
     ctx.setLineDash([0])
   }
-  selectorDelay++
 
   if (!usingSelectorTool) {
     pos.x = x
