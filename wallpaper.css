@@ -6,6 +6,10 @@
      overflow: hidden;
  }
 
+ * {
+     cursor: none;
+ }
+
  #custom-pen-cursor {
      position: absolute;
      pointer-events: none;
@@ -80,6 +84,21 @@
      height: 32px;
  }
 
+ #previous-page {
+     background: url('./assets//backarrow.png');
+     background-repeat: no-repeat;
+ }
+
+ #next-page {
+     background: url('./assets//forwardarrow.png');
+     background-repeat: no-repeat;
+ }
+
+ #selector {
+     background: url('./assets/selector.png');
+     background-repeat: no-repeat;
+ }
+
  #eraser {
      margin-right: 5px;
      margin-top: 15px;
@@ -97,4 +116,8 @@
      margin-top: 2px;
      background: url('./assets/reset.png');
      background-repeat: no-repeat;
+ }
+
+ #clock-container {
+     position: absolute;
  }

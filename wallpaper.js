@@ -1,5 +1,7 @@
 const customPenCursor = document.getElementById('custom-pen-cursor')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
+const date = document.getElementById('date')
+const time = document.getElementById('time')
 const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
 const sliderEraser = document.getElementById('slider-eraser')
@@ -34,6 +36,7 @@ let currentColor = colors.purple
 let previousButton
 let thickness = 4
 let eraserThickness = 18
+let selectorDelay = 0
 
 let usingSelectorTool = false
 let usingEraser = false
@@ -84,6 +87,8 @@ const update = () => {
   const diffy = pos.y - previousPos.y
   const diffsq = diffx * diffx + diffy * diffy
 
+  handleClock()
+
   if (isMouseDown && diffsq >= 16) {
     if (pos.y > minY)
       currentPointState.push({ x: pos.x, y: pos.y, currentColor, thickness })
@@ -106,7 +111,6 @@ sliderPen.addEventListener('input', () => {
   if (!usingEraser) {
     ctx.lineWidth = thickness
   }
-  handlePenCursorThickness()
 })
 
 sliderEraser.addEventListener('input', () => {
@@ -116,6 +120,29 @@ sliderEraser.addEventListener('input', () => {
   }
   handleEraserCursorThickness()
 })
+
+const handleClock = () => {
+  const d = new Date()
+  date.innerText = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
+
+  //  convert military time to standard time
+  var timeValue
+  const hours = d.getHours()
+  const minutes = d.getMinutes()
+  const seconds = d.getSeconds()
+  if (hours > 0 && hours <= 12) {
+    timeValue = '' + hours
+  } else if (hours > 12) {
+    timeValue = '' + (hours - 12)
+  } else if (hours == 0) {
+    timeValue = '12'
+  }
+
+  timeValue += minutes < 10 ? ':0' + minutes : ':' + minutes // get minutes
+  timeValue += seconds < 10 ? ':0' + seconds : ':' + seconds // get seconds
+  timeValue += hours >= 12 ? ' P.M.' : ' A.M.' // get AM/PM
+  time.innerText = timeValue
+}
 
 const handlePreviousPage = () => {
   //  check if previous page exists
@@ -159,7 +186,6 @@ const handleUndo = () => {
   // }
 
   canvasPointStates.pop()
-
   clearPage()
   drawPoints(canvasPointStates)
 }
@@ -171,20 +197,8 @@ const handleSelector = () => {
   minSelectedY = Math.min(selectorStartPoint.y, selectorEndPoint.y)
   maxSelectedY = Math.max(selectorStartPoint.y, selectorEndPoint.y)
 
-  if (selectedLines.length == 0) {
-    ctx.fillStyle = 'RED'
-    ctx.rect(
-      minSelectedX,
-      minSelectedY,
-      maxSelectedX - minSelectedX,
-      maxSelectedY - minSelectedY
-    )
-    ctx.stroke()
-  }
-
   //  save all points in the selected area
   let numSelectionsCount = 0
-  //  console.log(canvasPointStates.length)
   for (let i = 0; i < canvasPointStates.length; i++) {
     for (let point of canvasPointStates[i]) {
       if (
@@ -204,7 +218,6 @@ const handleSelector = () => {
         ) {
           selectedLines.push([...canvasPointStates[i]])
         }
-        console.log(selectedLines)
         movedLinesMapping.push({
           originalLine: i,
           movedLine: canvasPointStates.length + numSelectionsCount
@@ -221,14 +234,6 @@ const handleEraserCursorThickness = () => {
   cursorEraserHeight = eraserThickness
   customEraserCursor.style.width = eraserThickness
   customEraserCursor.style.height = eraserThickness
-}
-
-const handlePenCursorThickness = () => {
-  console.log('reached')
-  cursorPenWidth = thickness
-  cursorPenHeight = thickness
-  customPenCursor.style.width = thickness
-  customPenCursor.style.width = thickness
 }
 
 const drawPoints = (cPoints) => {
@@ -257,6 +262,7 @@ const drawPoints = (cPoints) => {
       ctx.stroke()
     }
   }
+  ctx.lineWidth = thickness
 }
 
 const clearPage = () => {
@@ -272,7 +278,6 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
     usingSelectorTool = false
 
     customPenCursor.style.display = 'initial'
-    handlePenCursorThickness()
     customEraserCursor.style.display = 'none'
 
     if (previousButton) {
@@ -349,6 +354,16 @@ window.addEventListener('mousedown', (e) => {
   const x = e.clientX
   const y = e.clientY
 
+  isMouseDown = true
+
+  // //  removed the outline of the selector
+  if (selectorStartPoint) {
+    clearPage()
+    drawPoints(canvasPointStates)
+    //  drawPoints changes lineWidth to previous point, have to change thickness back to current point
+    ctx.lineWidth = thickness
+  }
+
   if (!usingSelectorTool) {
     currentPointState = []
     if (previousPos.x !== x && previousPos.y !== y && y > minY) {
@@ -358,14 +373,15 @@ window.addEventListener('mousedown', (e) => {
     //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
     if (x < 1 || x >= cW - 1) return
 
-    isMouseDown = true
     previousPos.x = x
     previousPos.y = y
 
+    //  draw a single dot point
     ctx.strokeStyle = currentColor
     ctx.beginPath()
     ctx.moveTo(x - 1, y - 1)
     ctx.lineTo(x + 1, y + 1)
+    currentPointState.push({ x: x - 1, y: y - 1, currentColor, thickness })
     ctx.stroke()
   } else {
     selectorStartPoint = { x, y }
@@ -382,7 +398,6 @@ window.addEventListener('mousedown', (e) => {
   ) {
     movingSelectedArea = true
   } else {
-    console.log('clearing selected line')
     selectedLines = []
   }
 })
@@ -394,11 +409,35 @@ window.addEventListener('mousemove', (e) => {
   customEraserCursor.style.top = y - cursorEraserHeight / 2
   customEraserCursor.style.left = x - cursorEraserWidth / 2
 
-  console.log(y - cursorPenHeight)
-  customPenCursor.style.top = y - cursorPenHeight / 2
-  customPenCursor.style.left = x - cursorPenWidth / 2
+  //  img element acts differently, have to specify 'px'
+  customPenCursor.style.top = y - cursorPenHeight * 2 - 2 + 'px'
+  customPenCursor.style.left = x - cursorPenWidth * 2 - 2 + 'px'
 
-  console.log(customPenCursor.style.top)
+  //  draw the outline of the selected area
+
+  if (
+    selectorStartPoint &&
+    usingSelectorTool &&
+    isMouseDown &&
+    canvasPointStates.length > 0 &&
+    selectorDelay % 20 === 0
+  ) {
+    //  clear the canvas and redraw last state (removed the previous selector outline)
+    clearPage()
+    drawPoints(canvasPointStates)
+    ctx.lineWidth = '2'
+    ctx.setLineDash([10])
+    ctx.strokeStyle = 'GRAY'
+    ctx.rect(
+      selectorStartPoint.x,
+      selectorStartPoint.y,
+      x - selectorStartPoint.x,
+      y - selectorStartPoint.y
+    )
+    ctx.stroke()
+    ctx.setLineDash([0])
+  }
+  selectorDelay++
 
   if (!usingSelectorTool) {
     pos.x = x
@@ -415,7 +454,6 @@ window.addEventListener('mousemove', (e) => {
 
     //  update selectedLines points
     const tempLines = [...canvasPointStates]
-    console.log(selectedLines.length)
     for (let line of selectedLines) {
       for (let point of line) {
         point.x += distX
@@ -433,10 +471,12 @@ window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 
   if (hasMovedSelectedArea && movingSelectedArea) {
-    for (let pointState of selectedLines) {
-      console.log('pushing new line to canvasPointStates')
-      canvasPointStates.push(pointState)
-    }
+    //  Do not push to point states yet, do implementing this feature
+    //  If you move a line and undo, the line will just get deleted, will not go back to
+    //  previous position
+    // for (let pointState of selectedLines) {
+    //   canvasPointStates.push(pointState)
+    // }
     clearPage()
     drawPoints(canvasPointStates)
 
