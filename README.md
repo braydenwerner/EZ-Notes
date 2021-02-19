@@ -3,3 +3,5 @@
 ---
 
 <p align="center">A drawing and notetaking tool intended as a desktop background that is compatible with Wallpaper Engine.
+<br /> <br />
+<img src="assets/wallpaper-engine-icon.png"></img>
