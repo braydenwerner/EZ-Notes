@@ -1,5 +1,5 @@
-<h3 align="center">Whiteboard Desktop Wallpaper</h3>
+<h3 align="center">EZ Notes - A Whiteboard Desktop Wallpaper</h3>
 
 ---
 
-<p align="center">A drawing and notetaking tool that is compatible with Wallpaper Engine.</p>
+<p align="center">A drawing and notetaking tool intended as a desktop background that is compatible with Wallpaper Engine.
