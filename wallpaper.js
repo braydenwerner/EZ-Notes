@@ -1,4 +1,3 @@
-const customPenCursor = document.getElementById('custom-pen-cursor')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const date = document.getElementById('date')
 const time = document.getElementById('time')
@@ -71,12 +70,6 @@ let cursorEraserHeight = eraserThickness
 customEraserCursor.style.width = eraserThickness
 customEraserCursor.style.height = eraserThickness
 
-//  custom dynamic pen cursor
-let cursorPenWidth = thickness
-let cursorPenHeight = thickness
-customPenCursor.style.width = thickness
-customPenCursor.style.height = thickness
-
 window.onresize = () => {
   canvas.width = window.innerWidth
   cW = canvas.width
@@ -91,7 +84,6 @@ const update = () => {
 
   if (isMouseDown && diffsq >= 16) {
     if (pos.y > minY) {
-      console.log(usingEraser)
       if (usingEraser) {
         currentPointState.push({
           x: pos.x,
@@ -298,7 +290,6 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
     usingEraser = false
     usingSelectorTool = false
 
-    customPenCursor.style.display = 'initial'
     customEraserCursor.style.display = 'none'
 
     if (previousButton) {
@@ -346,7 +337,6 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
         usingEraser = true
         currentColor = colors.background
         customEraserCursor.style.display = 'initial'
-        customPenCursor.style.display = 'none'
         handleEraserCursorThickness()
         break
       case 'selector':
@@ -447,12 +437,7 @@ window.addEventListener('mousemove', (e) => {
   customEraserCursor.style.top = y - cursorEraserHeight / 2
   customEraserCursor.style.left = x - cursorEraserWidth / 2
 
-  //  img element acts differently, have to specify 'px'
-  customPenCursor.style.top = y - cursorPenHeight * 2 - 2 + 'px'
-  customPenCursor.style.left = x - cursorPenWidth * 2 - 2 + 'px'
-
   //  draw the outline of the selected area
-
   if (
     selectorStartPoint &&
     usingSelectorTool &&

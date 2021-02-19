@@ -6,16 +6,6 @@
      overflow: hidden;
  }
 
- * {
-     cursor: none;
- }
-
- #custom-pen-cursor {
-     position: absolute;
-     pointer-events: none;
-     z-index: 2;
- }
-
  #custom-eraser-cursor {
      position: absolute;
      pointer-events: none;
