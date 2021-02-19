@@ -7,8 +7,7 @@
  }
 
  #custom-eraser-cursor {
-     position: absolute;
-     pointer-events: none;
+     position: abso pointer-events: none;
      display: none;
      z-index: 2;
  }
