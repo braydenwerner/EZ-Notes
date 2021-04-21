@@ -28,7 +28,8 @@
      color: #DCDEDC;
      z-index: 1;
      user-select: none;
-     width: 50px;
+     width: 70px;
+     text-align: center;
  }
 
  #page-number {
@@ -50,7 +51,7 @@
      justify-content: space-around;
      align-items: center;
      margin-top: 20px;
-     width: 850px;
+     width: 880px;
      height: 55px;
      background-color: rgb(73, 77, 85);
      border-radius: 4px;

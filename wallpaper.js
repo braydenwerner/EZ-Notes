@@ -100,17 +100,23 @@ const update = () => {
       //  if the user draws a line very fast, points will be far apart
 
       //  minimum of 5 subpoints
-      const numSubpoints = Math.max(5, diffsq / 50)
-      console.log(numSubpoints)
+      const numSubpoints = Math.max(5, diffsq / 2950)
       ctx.strokeStyle = currentColor
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
+      ctx.lineWidth = thickness
       for (let i = 1; i < numSubpoints; i++) {
+        //  no need to update same position
+        if (
+          i * (diffx / numSubpoints) === previousPos.x &&
+          i * (diffy / numSubpoints === previousPos.y)
+        )
+          break
         currentPointState.push({
           x: previousPos.x + i * (diffx / numSubpoints),
           y: previousPos.y + i * (diffy / numSubpoints),
           currentColor,
-          thickness
+          thick: thickness
         })
         ctx.beginPath()
         ctx.moveTo(previousPos.x + diffx / i, previousPos.y + diffy / i)
@@ -429,10 +435,8 @@ const deletePointsInEraserRadius = (x, y) => {
         //  is larger than the eraser width
 
         //  filter out lines if it contains no points
-        canvasPointStates = canvasPointStates.filter((line) => line.length > 0)
+        canvasPointStates = canvasPointStates.filter((line) => line.length > 1)
         pointIdx--
-
-        console.log('in radius')
       }
     }
   }
@@ -514,10 +518,6 @@ window.addEventListener('mousemove', (e) => {
   const x = e.clientX
   const y = e.clientY
 
-  customEraserCursor.style.top = y - cursorEraserHeight / 2
-  customEraserCursor.style.left = x - cursorEraserWidth / 2
-
-  //  draw the outline of the selected area
   if (
     selectorStartPoint &&
     usingSelectorTool &&
@@ -603,6 +603,9 @@ window.addEventListener('mouseup', (e) => {
     selectorEndPoint = { x: e.clientX, y: e.clientY }
     handleSelector()
   }
+
+  clearPage()
+  drawPoints(canvasPointStates)
 })
 
 const init = () => {
