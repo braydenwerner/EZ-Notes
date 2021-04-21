@@ -518,6 +518,11 @@ window.addEventListener('mousemove', (e) => {
   const x = e.clientX
   const y = e.clientY
 
+  if (usingEraser) {
+    customEraserCursor.style.left = `${x - eraserThickness / 2}px`
+    customEraserCursor.style.top = `${y - eraserThickness / 2}px`
+  }
+
   if (
     selectorStartPoint &&
     usingSelectorTool &&
