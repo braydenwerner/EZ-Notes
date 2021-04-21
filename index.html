@@ -12,15 +12,9 @@
     <svg id="custom-eraser-cursor" width="100" height="100" viewBox="0 0 100 100">
         <circle r="49" cy="50" cx="50" style="opacity: 0.5; fill: #faa; stroke: #f00; stroke-width: 2px;" />
     </svg>
-    <div id="clock-container">
-        <div id="time"></div>
-        <div id="date"></div>
-    </div>
-    <div id="page-number-container">
-        <div id="page-number">1 of 1</div>
-    </div>
+
     <div id="pen-outer-container">
-        <div id="pen-color-container">
+        <div id="toolbar">
             <div id="pen-inner-col-1">
                 <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple" />
                 <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red" />
@@ -33,12 +27,17 @@
                     <input type="range" min="3" max="25" value="4" class="slider" id="slider-pen">
                     <input type="range" min="20" max="100" value="60" class="slider" id="slider-eraser">
                 </div>
-                <button class="pen-color" id="previous-page" />
-                <button class="pen-color" id="next-page" />
-                <button class="pen-color" id="selector" />
-                <button class="pen-color" id="eraser" />
-                <button class="pen-color" id="undo" />
-                <button class="pen-color" id="reset" />
+                <button class="pen-color" id="previous-page"></button>
+                <div id="page-number-container">
+                    <div id="page-number">1 of 1</div>
+                </div>
+                <button class="pen-color" id="next-page"></button>
+                <button class="pen-color" id="toggle-theme"></button>
+                <button class="pen-color" id="selector"></button>
+                <button class="pen-color" id="eraser"></button>
+                <button class="pen-color" id="undo"></button>
+                <button class="pen-color" id="reset"></button>
+                <button class="pen-color" id="pen-lock"></button>
             </div>
         </div>
     </div>

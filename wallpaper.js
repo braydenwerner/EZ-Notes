@@ -1,6 +1,7 @@
+const toolbar = document.getElementById('toolbar')
+const toggleTheme = document.getElementById('toggle-theme')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
-const date = document.getElementById('date')
-const time = document.getElementById('time')
+const penLock = document.getElementById('pen-lock')
 const pageNumber = document.getElementById('page-number')
 const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
@@ -16,7 +17,12 @@ let cW = canvas.width
 let cH = canvas.height
 
 //  should not be able to draw in the toolbar
-const minY = 100
+let minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
+let maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
+//  20 is the toolbar's margin-top
+let minY = toolbar.offsetTop - toolbar.offsetHeight / 2 + 20
+let maxY = toolbar.offsetTop + toolbar.offsetHeight / 2 + 20
+
 const colors = {
   background: 'rgb(40,44,52)',
   purple: 'rgb(198,120,221)',
@@ -38,6 +44,7 @@ let currentPageIndex = 0
 let currentPageNum = 1
 let totalPages = 1
 
+let isPenLocked = false
 let usingSelectorTool = false
 let usingEraser = false
 let isMouseDown = false
@@ -73,6 +80,13 @@ customEraserCursor.style.height = eraserThickness
 window.onresize = () => {
   canvas.width = window.innerWidth
   cW = canvas.width
+  ctx.fillStyle = colors.background
+  ctx.fillRect(0, 0, cW, cH)
+  ctx.lineWidth = thickness
+  minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
+  maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
+  minY = toolbar.offsetTop - toolbar.offsetHeight / 2
+  maxY = toolbar.offsetTop + toolbar.offsetHeight
 }
 
 const update = () => {
@@ -80,29 +94,45 @@ const update = () => {
   const diffy = pos.y - previousPos.y
   const diffsq = diffx * diffx + diffy * diffy
 
-  handleClock()
-
   if (isMouseDown && diffsq >= 16) {
-    if (pos.y > minY) {
-      if (usingEraser) {
-        currentPointState.push({
-          x: pos.x,
-          y: pos.y,
-          currentColor,
-          thick: eraserThickness
-        })
-      } else {
-        currentPointState.push({ x: pos.x, y: pos.y, currentColor, thickness })
-      }
-    }
+    if (!usingEraser) {
+      //  add points between previousPos and currentPos,
+      //  if the user draws a line very fast, points will be far apart
 
-    ctx.strokeStyle = currentColor
-    ctx.lineJoin = 'round'
-    ctx.lineCap = 'round'
-    ctx.beginPath()
-    ctx.moveTo(previousPos.x, previousPos.y)
-    ctx.lineTo(pos.x, pos.y)
-    ctx.stroke()
+      //  minimum of 5 subpoints
+      const numSubpoints = Math.max(5, diffsq / 50)
+      console.log(numSubpoints)
+      ctx.strokeStyle = currentColor
+      ctx.lineJoin = 'round'
+      ctx.lineCap = 'round'
+      for (let i = 1; i < numSubpoints; i++) {
+        currentPointState.push({
+          x: previousPos.x + i * (diffx / numSubpoints),
+          y: previousPos.y + i * (diffy / numSubpoints),
+          currentColor,
+          thickness
+        })
+        ctx.beginPath()
+        ctx.moveTo(previousPos.x + diffx / i, previousPos.y + diffy / i)
+        ctx.lineTo(pos.x, pos.y)
+        ctx.stroke()
+      }
+
+      // currentPointState.push({
+      //   x: pos.x,
+      //   y: pos.y,
+      //   currentColor,
+      //   thickness
+      // })
+
+      // ctx.beginPath()
+      // ctx.moveTo(previousPos.x, previousPos.y)
+      // ctx.lineTo(pos.x, pos.y)
+      // ctx.stroke()
+    } else {
+      //  search for points within the eraser radius and remove them
+      deletePointsInEraserRadius(pos.x, pos.y)
+    }
 
     previousPos.x = pos.x
     previousPos.y = pos.y
@@ -123,29 +153,6 @@ sliderEraser.addEventListener('input', () => {
   }
   handleEraserCursorThickness()
 })
-
-const handleClock = () => {
-  const d = new Date()
-  date.innerText = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
-
-  //  convert military time to standard time
-  var timeValue
-  const hours = d.getHours()
-  const minutes = d.getMinutes()
-  const seconds = d.getSeconds()
-  if (hours > 0 && hours <= 12) {
-    timeValue = '' + hours
-  } else if (hours > 12) {
-    timeValue = '' + (hours - 12)
-  } else if (hours == 0) {
-    timeValue = '12'
-  }
-
-  timeValue += minutes < 10 ? ':0' + minutes : ':' + minutes // get minutes
-  timeValue += seconds < 10 ? ':0' + seconds : ':' + seconds // get seconds
-  timeValue += hours >= 12 ? ' P.M.' : ' A.M.' // get AM/PM
-  time.innerText = timeValue
-}
 
 const handlePreviousPage = () => {
   //  check if previous page exists
@@ -177,6 +184,32 @@ const handleNextPage = () => {
   pageNumber.innerText = `${currentPageNum} of ${totalPages}`
 }
 
+const handleToggleTheme = () => {
+  if (colors.background === 'rgb(255,255,255)') {
+    toggleTheme.style.background = `url('./assets/moon.png')`
+    toggleTheme.style.backgroundRepeat = 'no-repeat'
+    colors.background = 'rgb(40,44,52)'
+  } else if (colors.background === 'rgb(40,44,52)') {
+    toggleTheme.style.background = `url('./assets/sun1.png')`
+    toggleTheme.style.backgroundRepeat = 'no-repeat'
+    colors.background = 'rgb(255,255,255)'
+  }
+  clearPage()
+  drawPoints(canvasPointStates)
+}
+
+const handlePenLocked = () => {
+  isPenLocked = !isPenLocked
+
+  if (isPenLocked) {
+    penLock.style.background = `url('./assets/padlock.png')`
+    penLock.style.backgroundRepeat = 'no-repeat'
+  } else {
+    penLock.style.background = `url('./assets/open-padlock.png')`
+    penLock.style.backgroundRepeat = 'no-repeat'
+  }
+}
+
 const handleUndo = () => {
   //  if undoing a select move, have to update movedLinesMapping accordingly
   //  and allow original shape to be reverted
@@ -185,14 +218,12 @@ const handleUndo = () => {
   //     //  {2,5}
   //     movedLinesMapping.pop()
   //   }
-  //   // console.log(lineMap)
   //   // if (lineMap.movedLine === canvasPointStates.length) {
   //   //   //  delete key-value in movedLinesMapping
 
   //   //   movedLinesMapping.pop()
   //   // }
   // }
-
   canvasPointStates.pop()
   clearPage()
   drawPoints(canvasPointStates)
@@ -271,11 +302,7 @@ const drawPoints = (cPoints) => {
     }
   }
   //  drawPoints changes lineWidth to previous point, have to change thickness back to current point
-  if (usingEraser) {
-    ctx.lineWidth = eraserThickness
-  } else {
-    ctx.lineWidth = thickness
-  }
+  ctx.lineWidth = thickness
 }
 
 const clearPage = () => {
@@ -287,6 +314,9 @@ const clearPage = () => {
 //  add event listeners and background colors to pen color divs
 document.querySelectorAll('.pen-color').forEach((colorButton) => {
   colorButton.addEventListener('click', () => {
+    //  should not be able to do anything with locked screen, except unlock screen
+    if (isPenLocked && colorButton.id !== 'pen-lock') return
+
     usingEraser = false
     usingSelectorTool = false
 
@@ -335,10 +365,10 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
         break
       case 'eraser':
         usingEraser = true
-        currentColor = colors.background
         customEraserCursor.style.display = 'initial'
         handleEraserCursorThickness()
         break
+
       case 'selector':
         usingSelectorTool = true
         break
@@ -355,17 +385,66 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
       case 'next-page':
         handleNextPage()
         break
+      case 'toggle-theme':
+        handleToggleTheme()
+        break
+      case 'pen-lock':
+        handlePenLocked()
+        break
     }
     ctx.lineWidth = colorButton.id === 'eraser' ? eraserThickness : thickness
     previousButton = colorButton
   })
 })
 
+const deletePointsInEraserRadius = (x, y) => {
+  for (let i = 0; i < canvasPointStates.length; i++) {
+    for (
+      let pointIdx = 0;
+      pointIdx < canvasPointStates[i].length - 1;
+      pointIdx++
+    ) {
+      //  connect the two points
+      const radius = eraserThickness / 2
+      let xDist = canvasPointStates[i][pointIdx].x - x
+      let yDist = canvasPointStates[i][pointIdx].y - y
+      if (xDist * xDist + yDist * yDist <= radius * radius) {
+        //  if you erase in the middle, have to turn one line into two
+        //  or else the line will not render properly
+
+        //  second line, insert new element at i+1
+        canvasPointStates.splice(
+          i + 1,
+          0,
+          [...canvasPointStates[i]].slice(
+            pointIdx + 1,
+            canvasPointStates[i].length
+          )
+        )
+        //  first line
+        canvasPointStates[i] = canvasPointStates[i].slice(0, pointIdx)
+
+        //  add points in between the two lines
+        //  if a user draws a line very fast, the distance in between two points
+        //  is larger than the eraser width
+
+        //  filter out lines if it contains no points
+        canvasPointStates = canvasPointStates.filter((line) => line.length > 0)
+        pointIdx--
+
+        console.log('in radius')
+      }
+    }
+  }
+  clearPage()
+  drawPoints(canvasPointStates)
+}
+
 window.addEventListener('mousedown', (e) => {
+  if (isPenLocked) return
+
   const x = e.clientX
   const y = e.clientY
-
-  isMouseDown = true
 
   // //  removed the outline of the selector
   if (selectorStartPoint) {
@@ -373,16 +452,14 @@ window.addEventListener('mousedown', (e) => {
     drawPoints(canvasPointStates)
   }
 
+  isMouseDown = true
+
   if (!usingSelectorTool) {
     currentPointState = []
-    if (previousPos.x !== x && previousPos.y !== y && y > minY) {
+    if (previousPos.x !== x && previousPos.y !== y) {
       if (usingEraser) {
-        currentPointState.push({
-          x: pos.x,
-          y: pos.y,
-          currentColor,
-          thick: eraserThickness
-        })
+        //  search for points within the eraser radius and remove them
+        deletePointsInEraserRadius(x, y)
       } else {
         currentPointState.push({
           x: pos.x,
@@ -395,6 +472,7 @@ window.addEventListener('mousedown', (e) => {
 
     //  if wallpaper on multiple monitors, possible to have mouse cords be out of bounds
     if (x < 1 || x >= cW - 1) return
+    if (usingEraser) return
 
     previousPos.x = x
     previousPos.y = y
@@ -431,6 +509,8 @@ window.addEventListener('mousedown', (e) => {
 })
 
 window.addEventListener('mousemove', (e) => {
+  if (isPenLocked) return
+
   const x = e.clientX
   const y = e.clientY
 
@@ -489,6 +569,11 @@ window.addEventListener('mousemove', (e) => {
 })
 
 window.addEventListener('mouseup', (e) => {
+  if (isPenLocked) return
+
+  const x = e.clientX
+  const y = e.clientY
+
   isMouseDown = false
 
   if (hasMovedSelectedArea && movingSelectedArea) {
@@ -507,9 +592,12 @@ window.addEventListener('mouseup', (e) => {
 
   if (!usingSelectorTool) {
     //  add to total state and clear current point state
-    if (e.clientY > minY) {
-      canvasPointStates.push([...currentPointState])
-    }
+
+    //  if within toolbar or penLocked, do not register
+    if (y >= minY && y <= maxY && x >= minX && x <= maxX) return
+
+    if (!usingEraser) canvasPointStates.push([...currentPointState])
+
     currentPointState = []
   } else {
     selectorEndPoint = { x: e.clientX, y: e.clientY }
