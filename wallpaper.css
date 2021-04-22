@@ -13,14 +13,30 @@
      z-index: 2;
  }
 
- #clock-container {
+ #color-picker-container {
      position: absolute;
-     margin-left: 35px;
-     margin-top: 30px;
+     display: none;
+     margin-top: 80px;
+     align-items: center;
+     justify-content: center;
+     background-color: rgb(73, 77, 85);
      font-family: Verdana;
      color: #DCDEDC;
-     z-index: 1;
-     user-select: none;
+     border-radius: 7px;
+ }
+
+ .color-picker-sub {
+     display: flex;
+     flex-direction: row;
+ }
+
+ .color-slider-container {
+     width: 70%
+ }
+
+ .color-value {
+     margin-left: 10px;
+     color: WHITE;
  }
 
  #page-number-container {
@@ -51,7 +67,7 @@
      justify-content: space-around;
      align-items: center;
      margin-top: 20px;
-     width: 880px;
+     width: 930px;
      height: 55px;
      background-color: rgb(73, 77, 85);
      border-radius: 4px;
@@ -69,6 +85,12 @@
 
  .pen-color:hover {
      transform: translateY(-3px);
+ }
+
+ #color-picker-button {
+     border: 2px solid black;
+     text-align: center;
+     font-size: 25px;
  }
 
  #pen-inner-col-1 {
@@ -141,6 +163,7 @@
      background-repeat: no-repeat;
      filter: invert(1);
      margin-left: 5px;
+     margin-right: 5px;
  }
 
  input[type=range] {

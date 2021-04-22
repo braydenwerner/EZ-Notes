@@ -13,14 +13,36 @@
         <circle r="49" cy="50" cx="50" style="opacity: 0.5; fill: #faa; stroke: #f00; stroke-width: 2px;" />
     </svg>
 
+    <div id="color-picker-container">
+        <div class="color-picker-sub">
+            <div class="color-slider-container">
+                <input type="range" min="0" max="255" value="255" class="slider" id="red-slider">
+            </div>
+            <div class="color-value" id="color-red-value">R: 255</div>
+        </div>
+        <div class="color-picker-sub">
+            <div class="color-slider-container">
+                <input type="range" min="0" max="255" value="255" class="slider" id="green-slider">
+            </div>
+            <div class="color-value" id="color-green-value">G: 255</div>
+        </div>
+        <div class="color-picker-sub">
+            <div class="color-slider-container">
+                <input type="range" min="0" max="255" value="255" class="slider" id="blue-slider">
+            </div>
+            <div class="color-value" id="color-blue-value">B: 255</div>
+        </div>
+    </div>
+
     <div id="pen-outer-container">
         <div id="toolbar">
             <div id="pen-inner-col-1">
-                <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple" />
-                <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red" />
-                <button style="background-color: rgb(0, 194, 182)" class="pen-color" id="pen-blue" />
-                <button style="background-color: rgb(152, 195, 121)" class="pen-color" id="pen-green" />
-                <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow" />
+                <button style="background-color: rgb(255,255,255)" class="pen-color" id="color-picker-button">C</button>
+                <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple"></button>
+                <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red"></button>
+                <button style="background-color: rgb(0, 194, 182)" class="pen-color" id="pen-blue"></button>
+                <button style="background-color: rgb(152, 195, 121)" class="pen-color" id="pen-green"></button>
+                <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow"></button>
             </div>
             <div id="pen-inner-col-2">
                 <div id="slider-container">

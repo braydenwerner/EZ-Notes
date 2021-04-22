@@ -1,4 +1,12 @@
 const toolbar = document.getElementById('toolbar')
+const colorPickerButton = document.getElementById('color-picker-button')
+const colorPickerContainer = document.getElementById('color-picker-container')
+const redSlider = document.getElementById('red-slider')
+const greenSlider = document.getElementById('green-slider')
+const blueSlider = document.getElementById('blue-slider')
+const colorRedValue = document.getElementById('color-red-value')
+const colorGreenValue = document.getElementById('color-green-value')
+const colorBlueValue = document.getElementById('color-blue-value')
 const toggleTheme = document.getElementById('toggle-theme')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const penLock = document.getElementById('pen-lock')
@@ -23,8 +31,21 @@ let maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
 let minY = toolbar.offsetTop - toolbar.offsetHeight / 2 + 20
 let maxY = toolbar.offsetTop + toolbar.offsetHeight / 2 + 20
 
+//  color chooser popUp
+let isPopUpHidden = true
+//  set the position relative to screensize and toolbar
+colorPickerContainer.style.width = '285px'
+colorPickerContainer.style.height = '68px'
+colorPickerContainer.style.left = minX + 'px'
+
+let popUpMinX = minX
+let popUpMaxX = minX + 285
+let popUpMinY = 83
+let popUpMaxY = 83 + 68
+
 const colors = {
   background: 'rgb(40,44,52)',
+  customColor: 'rgb(255,255,255)',
   purple: 'rgb(198,120,221)',
   darkPurple: 'rgb(150, 72, 173)',
   red: 'rgb(224, 108, 117)',
@@ -82,11 +103,18 @@ window.onresize = () => {
   cW = canvas.width
   ctx.fillStyle = colors.background
   ctx.fillRect(0, 0, cW, cH)
+
   ctx.lineWidth = thickness
   minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
   maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
   minY = toolbar.offsetTop - toolbar.offsetHeight / 2
   maxY = toolbar.offsetTop + toolbar.offsetHeight
+
+  colorPickerContainer.style.left = minX + 'px'
+  popUpMinX = minX
+  popUpMaxX = minX + 285
+  popUpMinY = 83
+  popUpMaxY = 83 + 68
 }
 
 const update = () => {
@@ -123,18 +151,6 @@ const update = () => {
         ctx.lineTo(pos.x, pos.y)
         ctx.stroke()
       }
-
-      // currentPointState.push({
-      //   x: pos.x,
-      //   y: pos.y,
-      //   currentColor,
-      //   thickness
-      // })
-
-      // ctx.beginPath()
-      // ctx.moveTo(previousPos.x, previousPos.y)
-      // ctx.lineTo(pos.x, pos.y)
-      // ctx.stroke()
     } else {
       //  search for points within the eraser radius and remove them
       deletePointsInEraserRadius(pos.x, pos.y)
@@ -144,6 +160,38 @@ const update = () => {
     previousPos.y = pos.y
   }
 }
+
+const setCustomColor = () => {
+  colorRedValue.innerText = 'R: ' + redSlider.value
+  colorGreenValue.innerText = 'G: ' + greenSlider.value
+  colorBlueValue.innerText = 'B: ' + blueSlider.value
+
+  colors.customColor = `rgb(${redSlider.value},${greenSlider.value}, ${blueSlider.value})`
+  currentColor = colors.customColor
+  colorPickerButton.style.backgroundColor = colors.customColor
+}
+
+colorPickerButton.addEventListener('click', () => {
+  isPopUpHidden = !isPopUpHidden
+
+  if (isPopUpHidden) colorPickerContainer.style.display = 'none'
+  else colorPickerContainer.style.display = 'inherit'
+})
+
+//  do not want to draw behind the container, so can just undo the line that is drawn
+colorPickerContainer.addEventListener('click', () => {})
+
+redSlider.addEventListener('input', () => {
+  setCustomColor()
+})
+
+greenSlider.addEventListener('input', () => {
+  setCustomColor()
+})
+
+blueSlider.addEventListener('input', () => {
+  setCustomColor()
+})
 
 sliderPen.addEventListener('input', () => {
   thickness = sliderPen.value
@@ -217,19 +265,6 @@ const handlePenLocked = () => {
 }
 
 const handleUndo = () => {
-  //  if undoing a select move, have to update movedLinesMapping accordingly
-  //  and allow original shape to be reverted
-  // for (let lineMap of movedLinesMapping) {
-  //   if (lineMap.movedLine === canvasPointStates.length - 1) {
-  //     //  {2,5}
-  //     movedLinesMapping.pop()
-  //   }
-  //   // if (lineMap.movedLine === canvasPointStates.length) {
-  //   //   //  delete key-value in movedLinesMapping
-
-  //   //   movedLinesMapping.pop()
-  //   // }
-  // }
   canvasPointStates.pop()
   clearPage()
   drawPoints(canvasPointStates)
@@ -289,7 +324,6 @@ const drawPoints = (cPoints) => {
     }
 
     //  if the line was selected and moved, don't draw the original
-    let lineMoved = false
     movedLinesMapping = []
     /*
     for (let lineMap of movedLinesMapping) {
@@ -330,6 +364,9 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
 
     if (previousButton) {
       switch (previousButton.id) {
+        case 'color-picker-button':
+          previousButton.style.backgroundColor = colors.customColor
+          break
         case 'pen-purple':
           previousButton.style.backgroundColor = colors.purple
           break
@@ -349,6 +386,10 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
     }
 
     switch (colorButton.id) {
+      case 'color-picker-button':
+        colorButton.style.backgroundColor = colors.customColor
+        currentColor = colors.customColor
+        break
       case 'pen-purple':
         colorButton.style.backgroundColor = colors.darkPurple
         currentColor = colors.purple
@@ -430,10 +471,6 @@ const deletePointsInEraserRadius = (x, y) => {
         //  first line
         canvasPointStates[i] = canvasPointStates[i].slice(0, pointIdx)
 
-        //  add points in between the two lines
-        //  if a user draws a line very fast, the distance in between two points
-        //  is larger than the eraser width
-
         //  filter out lines if it contains no points
         canvasPointStates = canvasPointStates.filter((line) => line.length > 1)
         pointIdx--
@@ -449,6 +486,24 @@ window.addEventListener('mousedown', (e) => {
 
   const x = e.clientX
   const y = e.clientY
+
+  if (
+    (y >= minY && y <= maxY && x >= minX && x <= maxX) ||
+    (!isPopUpHidden &&
+      y >= popUpMinY &&
+      y <= popUpMaxY &&
+      x >= popUpMinX &&
+      x <= popUpMaxX)
+  )
+    return
+
+  if (
+    !isPopUpHidden &&
+    !(y >= popUpMinY && y <= popUpMaxY && x >= popUpMinX && x <= popUpMaxX)
+  ) {
+    isPopUpHidden = true
+    colorPickerContainer.style.display = 'none'
+  }
 
   // //  removed the outline of the selector
   if (selectorStartPoint) {
@@ -582,12 +637,6 @@ window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 
   if (hasMovedSelectedArea && movingSelectedArea) {
-    //  Do not push to point states yet, do implementing this feature
-    //  If you move a line and undo, the line will just get deleted, will not go back to
-    //  previous position
-    // for (let pointState of selectedLines) {
-    //   canvasPointStates.push(pointState)
-    // }
     clearPage()
     drawPoints(canvasPointStates)
 
@@ -597,9 +646,16 @@ window.addEventListener('mouseup', (e) => {
 
   if (!usingSelectorTool) {
     //  add to total state and clear current point state
-
-    //  if within toolbar or penLocked, do not register
-    if (y >= minY && y <= maxY && x >= minX && x <= maxX) return
+    //  if within toolbar or the color tool popup do not register
+    if (
+      (y >= minY && y <= maxY && x >= minX && x <= maxX) ||
+      (!isPopUpHidden &&
+        y >= popUpMinY &&
+        y <= popUpMaxY &&
+        x >= popUpMinX &&
+        x <= popUpMaxX)
+    )
+      return
 
     if (!usingEraser) canvasPointStates.push([...currentPointState])
 
