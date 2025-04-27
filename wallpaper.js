@@ -1,3 +1,6 @@
+import { COLORS } from './config.js'
+import Canvas from './canvas.js'
+
 const toolbar = document.getElementById('toolbar')
 const colorPickerButton = document.getElementById('color-picker-button')
 const colorPickerContainer = document.getElementById('color-picker-container')
@@ -11,18 +14,11 @@ const toggleTheme = document.getElementById('toggle-theme')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const penLock = document.getElementById('pen-lock')
 const pageNumber = document.getElementById('page-number')
-const inputColor = document.getElementById('input-color')
 const sliderPen = document.getElementById('slider-pen')
 const sliderEraser = document.getElementById('slider-eraser')
-const undo = document.getElementById('undo')
-const canvas = document.getElementById('canvas')
-const ctx = canvas.getContext('2d')
 
-canvas.width = window.innerWidth
-canvas.height = window.innerHeight
-const baseHeight = canvas.height
-let cW = canvas.width
-let cH = canvas.height
+const canvas = new Canvas()
+const ctx = canvas.getCtx()
 
 // Drawing is not allowed in the toolbar area
 let minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
@@ -43,21 +39,7 @@ let popUpMaxX = minX + 285
 let popUpMinY = 83
 let popUpMaxY = 83 + 68
 
-const colors = {
-  background: 'rgb(40,44,52)',
-  customColor: 'rgb(255,255,255)',
-  purple: 'rgb(198,120,221)',
-  darkPurple: 'rgb(150, 72, 173)',
-  red: 'rgb(224, 108, 117)',
-  darkRed: 'rgb(176, 60, 69)',
-  green: 'rgb(152, 195, 121)',
-  darkGreen: 'rgb(104, 147, 73)',
-  blue: 'rgb(0, 194, 182)',
-  darkBlue: 'rgb(0, 146, 134)',
-  yellow: 'rgb(229, 192, 123)',
-  darkYellow: 'rgb(191, 154, 85)'
-}
-let currentColor = colors.purple
+let currentColor = COLORS.purple
 let previousButton
 let thickness = sliderPen.value
 let eraserThickness = sliderEraser.value
@@ -93,16 +75,15 @@ let movedLinesMapping = []
 let minSelectedX, maxSelectedX, minSelectedY, maxSelectedY
 
 // Custom dynamic eraser cursor
-let cursorEraserWidth = eraserThickness
-let cursorEraserHeight = eraserThickness
 customEraserCursor.style.width = eraserThickness
 customEraserCursor.style.height = eraserThickness
 
 window.onresize = () => {
-  canvas.width = window.innerWidth
-  cW = canvas.width
-  ctx.fillStyle = colors.background
-  ctx.fillRect(0, 0, cW, cH)
+  canvas.setCW(window.innerWidth)
+  canvas.setCH(window.innerHeight)
+
+  ctx.fillStyle = COLORS.background
+  ctx.fillRect(0, 0, canvas.getCW(), canvas.getCH())
 
   ctx.lineWidth = thickness
   minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
@@ -166,9 +147,9 @@ const setCustomColor = () => {
   colorGreenValue.innerText = 'G: ' + greenSlider.value
   colorBlueValue.innerText = 'B: ' + blueSlider.value
 
-  colors.customColor = `rgb(${redSlider.value},${greenSlider.value}, ${blueSlider.value})`
-  currentColor = colors.customColor
-  colorPickerButton.style.backgroundColor = colors.customColor
+  COLORS.customColor = `rgb(${redSlider.value},${greenSlider.value}, ${blueSlider.value})`
+  currentColor = COLORS.customColor
+  colorPickerButton.style.backgroundColor = COLORS.customColor
 }
 
 colorPickerButton.addEventListener('click', () => {
@@ -212,7 +193,7 @@ const handlePreviousPage = () => {
   // Check if previous page exists
   if (currentPageIndex === 0) return
 
-  clearPage()
+  canvas.clear()
   pagePointStates[currentPageIndex] = [...canvasPointStates]
   currentPageIndex--
 
@@ -224,7 +205,7 @@ const handlePreviousPage = () => {
 }
 
 const handleNextPage = () => {
-  clearPage()
+  canvas.clear()
   pagePointStates[currentPageIndex] = [...canvasPointStates]
   currentPageIndex++
 
@@ -243,8 +224,8 @@ const handleNextPage = () => {
 const handleToggleTheme = () => {
   // Check if current background color is close to white
   const isLightTheme =
-    colors.background.includes('255,255,255') ||
-    (colors.background.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/) &&
+    COLORS.background.includes('255,255,255') ||
+    (COLORS.background.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/) &&
       parseInt(RegExp.$1) > 200 &&
       parseInt(RegExp.$2) > 200 &&
       parseInt(RegExp.$3) > 200)
@@ -253,14 +234,14 @@ const handleToggleTheme = () => {
     // Switch to dark theme
     toggleTheme.style.background = `url('./assets/moon.png')`
     toggleTheme.style.backgroundRepeat = 'no-repeat'
-    colors.background = 'rgb(40,44,52)'
+    COLORS.background = 'rgb(40,44,52)'
   } else {
     // Switch to light theme
     toggleTheme.style.background = `url('./assets/sun1.png')`
     toggleTheme.style.backgroundRepeat = 'no-repeat'
-    colors.background = 'rgb(255,255,255)'
+    COLORS.background = 'rgb(255,255,255)'
   }
-  clearPage()
+  canvas.clear()
   drawPoints(canvasPointStates)
   saveCanvasData()
 }
@@ -279,7 +260,7 @@ const handlePenLocked = () => {
 
 const handleUndo = () => {
   canvasPointStates.pop()
-  clearPage()
+  canvas.clear()
   drawPoints(canvasPointStates)
   saveCanvasData()
 }
@@ -330,7 +311,107 @@ const handleEraserCursorThickness = () => {
   customEraserCursor.style.height = eraserThickness
 }
 
-const drawPoints = (cPoints) => {
+// Add event listeners and background COLORS for pen color divs
+document.querySelectorAll('.pen-color').forEach((colorButton) => {
+  colorButton.addEventListener('click', () => {
+    // When screen is locked, shouldn't be able to do anything except unlock screen
+    if (isPenLocked && colorButton.id !== 'pen-lock') return
+
+    usingEraser = false
+    usingSelectorTool = false
+
+    customEraserCursor.style.display = 'none'
+
+    if (previousButton) {
+      switch (previousButton.id) {
+        case 'color-picker-button':
+          previousButton.style.backgroundColor = COLORS.customColor
+          break
+        case 'pen-purple':
+          previousButton.style.backgroundColor = COLORS.purple
+          break
+        case 'pen-red':
+          previousButton.style.backgroundColor = COLORS.red
+          break
+        case 'pen-blue':
+          previousButton.style.backgroundColor = COLORS.blue
+          break
+        case 'pen-green':
+          previousButton.style.backgroundColor = COLORS.green
+          break
+        case 'pen-yellow':
+          previousButton.style.backgroundColor = COLORS.yellow
+          break
+      }
+    }
+
+    switch (colorButton.id) {
+      case 'color-picker-button':
+        colorButton.style.backgroundColor = COLORS.customColor
+        currentColor = COLORS.customColor
+        break
+      case 'pen-purple':
+        colorButton.style.backgroundColor = COLORS.darkPurple
+        currentColor = COLORS.purple
+        break
+      case 'pen-red':
+        colorButton.style.backgroundColor = COLORS.darkRed
+        currentColor = COLORS.red
+        break
+      case 'pen-blue':
+        colorButton.style.backgroundColor = COLORS.darkBlue
+        currentColor = COLORS.blue
+        break
+      case 'pen-green':
+        colorButton.style.backgroundColor = COLORS.darkGreen
+        currentColor = COLORS.green
+        break
+      case 'pen-yellow':
+        colorButton.style.backgroundColor = COLORS.darkYellow
+        currentColor = COLORS.yellow
+        break
+      case 'eraser':
+        usingEraser = true
+        customEraserCursor.style.display = 'initial'
+        handleEraserCursorThickness()
+        break
+
+      case 'selector':
+        usingSelectorTool = true
+        break
+      case 'undo':
+        handleUndo()
+        break
+      case 'reset':
+        canvasPointStates = []
+        canvas.clear()
+        // Clear saved data
+        localStorage.removeItem('ez-notes-data')
+        // Clear all data block cookies
+        for (let i = 0; i <= 20; i++) {
+          document.cookie = `ez_data_${i}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+        }
+        document.cookie = `ez_data_chunks=0; path=/; max-age=31536000`
+        break
+      case 'previous-page':
+        handlePreviousPage()
+        break
+      case 'next-page':
+        handleNextPage()
+        break
+      case 'toggle-theme':
+        handleToggleTheme()
+        break
+      case 'pen-lock':
+        handlePenLocked()
+        break
+    }
+    ctx.lineWidth = colorButton.id === 'eraser' ? eraserThickness : thickness
+    previousButton = colorButton
+  })
+})
+
+function drawPoints(cPoints) {
   for (let i = 0; i < cPoints.length; i++) {
     if (cPoints[i].length > 0) {
       ctx.strokeStyle = cPoints[i][0].currentColor
@@ -358,112 +439,6 @@ const drawPoints = (cPoints) => {
   // drawPoints changes line width to previous point's width, must change thickness back to current point
   ctx.lineWidth = thickness
 }
-
-const clearPage = () => {
-  ctx.fillStyle = colors.background
-  ctx.clearRect(0, 0, cW, cH)
-  ctx.fillRect(0, 0, cW, cH)
-}
-
-// Add event listeners and background colors for pen color divs
-document.querySelectorAll('.pen-color').forEach((colorButton) => {
-  colorButton.addEventListener('click', () => {
-    // When screen is locked, shouldn't be able to do anything except unlock screen
-    if (isPenLocked && colorButton.id !== 'pen-lock') return
-
-    usingEraser = false
-    usingSelectorTool = false
-
-    customEraserCursor.style.display = 'none'
-
-    if (previousButton) {
-      switch (previousButton.id) {
-        case 'color-picker-button':
-          previousButton.style.backgroundColor = colors.customColor
-          break
-        case 'pen-purple':
-          previousButton.style.backgroundColor = colors.purple
-          break
-        case 'pen-red':
-          previousButton.style.backgroundColor = colors.red
-          break
-        case 'pen-blue':
-          previousButton.style.backgroundColor = colors.blue
-          break
-        case 'pen-green':
-          previousButton.style.backgroundColor = colors.green
-          break
-        case 'pen-yellow':
-          previousButton.style.backgroundColor = colors.yellow
-          break
-      }
-    }
-
-    switch (colorButton.id) {
-      case 'color-picker-button':
-        colorButton.style.backgroundColor = colors.customColor
-        currentColor = colors.customColor
-        break
-      case 'pen-purple':
-        colorButton.style.backgroundColor = colors.darkPurple
-        currentColor = colors.purple
-        break
-      case 'pen-red':
-        colorButton.style.backgroundColor = colors.darkRed
-        currentColor = colors.red
-        break
-      case 'pen-blue':
-        colorButton.style.backgroundColor = colors.darkBlue
-        currentColor = colors.blue
-        break
-      case 'pen-green':
-        colorButton.style.backgroundColor = colors.darkGreen
-        currentColor = colors.green
-        break
-      case 'pen-yellow':
-        colorButton.style.backgroundColor = colors.darkYellow
-        currentColor = colors.yellow
-        break
-      case 'eraser':
-        usingEraser = true
-        customEraserCursor.style.display = 'initial'
-        handleEraserCursorThickness()
-        break
-
-      case 'selector':
-        usingSelectorTool = true
-        break
-      case 'undo':
-        handleUndo()
-        break
-      case 'reset':
-        canvasPointStates = []
-        clearPage()
-        // Clear saved data
-        localStorage.removeItem('ez-notes-data')
-        // Clear all data block cookies
-        for (let i = 0; i <= 20; i++) {
-          document.cookie = `ez_data_${i}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-        }
-        document.cookie = `ez_data_chunks=0; path=/; max-age=31536000`
-        break
-      case 'previous-page':
-        handlePreviousPage()
-        break
-      case 'next-page':
-        handleNextPage()
-        break
-      case 'toggle-theme':
-        handleToggleTheme()
-        break
-      case 'pen-lock':
-        handlePenLocked()
-        break
-    }
-    ctx.lineWidth = colorButton.id === 'eraser' ? eraserThickness : thickness
-    previousButton = colorButton
-  })
-})
 
 const deletePointsInEraserRadius = (x, y) => {
   for (let i = 0; i < canvasPointStates.length; i++) {
@@ -498,7 +473,7 @@ const deletePointsInEraserRadius = (x, y) => {
       }
     }
   }
-  clearPage()
+  canvas.clear()
   drawPoints(canvasPointStates)
 }
 
@@ -528,7 +503,7 @@ window.addEventListener('mousedown', (e) => {
 
   // Remove selector outline
   if (selectorStartPoint) {
-    clearPage()
+    canvas.clear()
     drawPoints(canvasPointStates)
   }
 
@@ -551,7 +526,7 @@ window.addEventListener('mousedown', (e) => {
     }
 
     // If wallpaper is on multiple displays, mouse coordinates may be out of bounds
-    if (x < 1 || x >= cW - 1) return
+    if (x < 1 || x >= canvas.getCW() - 1) return
     if (usingEraser) return
 
     previousPos.x = x
@@ -606,7 +581,7 @@ window.addEventListener('mousemove', (e) => {
     canvasPointStates.length > 0
   ) {
     // Clear canvas and redraw last state (remove previous selector outline)
-    clearPage()
+    canvas.clear()
     drawPoints(canvasPointStates)
     ctx.lineWidth = '2'
     ctx.setLineDash([10])
@@ -644,7 +619,7 @@ window.addEventListener('mousemove', (e) => {
       tempLines.push(line)
     }
 
-    clearPage()
+    canvas.clear()
     drawPoints(tempLines)
   }
 })
@@ -658,7 +633,7 @@ window.addEventListener('mouseup', (e) => {
   isMouseDown = false
 
   if (hasMovedSelectedArea && movingSelectedArea) {
-    clearPage()
+    canvas.clear()
     drawPoints(canvasPointStates)
 
     movingSelectedArea = false
@@ -686,14 +661,14 @@ window.addEventListener('mouseup', (e) => {
     handleSelector()
   }
 
-  clearPage()
+  canvas.clear()
   drawPoints(canvasPointStates)
   saveCanvasData()
 })
 
 const init = () => {
-  ctx.fillStyle = colors.background
-  ctx.fillRect(0, 0, cW, cH)
+  ctx.fillStyle = COLORS.background
+  ctx.fillRect(0, 0, canvas.getCW(), canvas.cH)
   ctx.lineWidth = 4
 
   // Auto-save enabled by default
@@ -786,7 +761,7 @@ const saveCanvasData = () => {
       pages: compressedData,
       currentPage: currentPageIndex,
       totalPages: totalPages,
-      theme: colors.background
+      theme: COLORS.background
     }
 
     const dataString = JSON.stringify(savedData)
@@ -864,12 +839,12 @@ const loadCanvasData = () => {
         currentPageNum = currentPageIndex + 1
 
         if (savedData.theme) {
-          colors.background = savedData.theme
+          COLORS.background = savedData.theme
         }
 
         canvasPointStates = pagePointStates[currentPageIndex] || []
         pageNumber.innerText = `${currentPageNum} of ${totalPages}`
-        clearPage()
+        canvas.clear()
         drawPoints(canvasPointStates)
         console.log(
           'Data load successful, page count: ' + pagePointStates.length
@@ -901,9 +876,9 @@ window.wallpaperPropertyListener = {
       const g = Math.ceil(color[1] * 255)
       const b = Math.ceil(color[2] * 255)
       const customColor = `rgb(${r}, ${g}, ${b})`
-      colors.background = customColor
+      COLORS.background = customColor
 
-      clearPage()
+      canvas.clear()
       drawPoints(canvasPointStates)
     }
   }
