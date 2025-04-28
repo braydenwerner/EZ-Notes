@@ -1,7 +1,8 @@
 import { COLORS } from './config.js'
-import Canvas from './canvas.js'
+import Canvas from './Canvas.js'
+import Toolbar from './Toolbar.js'
+import WallpaperPropertyListener from './WallpaperPropertyListener.js'
 
-const toolbar = document.getElementById('toolbar')
 const colorPickerButton = document.getElementById('color-picker-button')
 const colorPickerContainer = document.getElementById('color-picker-container')
 const redSlider = document.getElementById('red-slider')
@@ -20,15 +21,17 @@ const sliderEraser = document.getElementById('slider-eraser')
 const canvas = new Canvas()
 const ctx = canvas.getCtx()
 
+const toolbar = new Toolbar()
+
 // Drawing is not allowed in the toolbar area
-let minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
-let maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
+let minX = toolbar.getOffsetLeft() - toolbar.getOffsetWidth() / 2
+let maxX = toolbar.getOffsetLeft() + toolbar.getOffsetWidth() / 2
 // 20 is the top margin of the toolbar
-let minY = toolbar.offsetTop - toolbar.offsetHeight / 2 + 20
-let maxY = toolbar.offsetTop + toolbar.offsetHeight / 2 + 20
+let minY = toolbar.getOffsetTop() - toolbar.getOffsetHeight() / 2 + 20
+let maxY = toolbar.getOffsetTop() + toolbar.getOffsetHeight() / 2 + 20
 
 // Color picker popup
-let isPopUpHidden = true
+let isColorPickerPopUpHidden = true
 // Set position based on screen size and toolbar
 colorPickerContainer.style.width = '285px'
 colorPickerContainer.style.height = '68px'
@@ -60,8 +63,6 @@ let selectorStartPoint
 let selectorEndPoint
 let lastSelectedPoints
 
-// Store canvas state for undo button
-let canvasPointStates = []
 // Create a smaller array to add to the total canvas state array
 let currentPointState = []
 // Array containing canvasPointStates for each page
@@ -86,10 +87,10 @@ window.onresize = () => {
   ctx.fillRect(0, 0, canvas.getCW(), canvas.getCH())
 
   ctx.lineWidth = thickness
-  minX = toolbar.offsetLeft - toolbar.offsetWidth / 2
-  maxX = toolbar.offsetLeft + toolbar.offsetWidth / 2
-  minY = toolbar.offsetTop - toolbar.offsetHeight / 2
-  maxY = toolbar.offsetTop + toolbar.offsetHeight
+  minX = toolbar.getOffsetLeft() - toolbar.getOffsetWidth() / 2
+  maxX = toolbar.getOffsetLeft() + toolbar.getOffsetWidth() / 2
+  minY = toolbar.getOffsetTop() - toolbar.getOffsetHeight() / 2
+  maxY = toolbar.getOffsetTop() + toolbar.getOffsetHeight()
 
   colorPickerContainer.style.left = minX + 'px'
   popUpMinX = minX
@@ -134,7 +135,11 @@ const update = () => {
       }
     } else {
       // Search for points within eraser radius and remove them
-      deletePointsInEraserRadius(pos.x, pos.y)
+      canvas.deletePointsInRadius({
+        x: pos.x,
+        y: pos.y,
+        eraserThickness
+      })
     }
 
     previousPos.x = pos.x
@@ -153,9 +158,9 @@ const setCustomColor = () => {
 }
 
 colorPickerButton.addEventListener('click', () => {
-  isPopUpHidden = !isPopUpHidden
+  isColorPickerPopUpHidden = !isColorPickerPopUpHidden
 
-  if (isPopUpHidden) colorPickerContainer.style.display = 'none'
+  if (isColorPickerPopUpHidden) colorPickerContainer.style.display = 'none'
   else colorPickerContainer.style.display = 'inherit'
 })
 
@@ -194,10 +199,14 @@ const handlePreviousPage = () => {
   if (currentPageIndex === 0) return
 
   canvas.clear()
-  pagePointStates[currentPageIndex] = [...canvasPointStates]
+  pagePointStates[currentPageIndex] = [...canvas.getPointStateTimeline()]
   currentPageIndex--
 
-  drawPoints(pagePointStates[currentPageIndex])
+  canvas.drawPoints({
+    cPoints: pagePointStates[currentPageIndex],
+    thickness,
+    movedLinesMapping: []
+  })
   canvasPointStates = pagePointStates[currentPageIndex]
   currentPageNum--
   pageNumber.innerText = `${currentPageNum} of ${totalPages}`
@@ -206,15 +215,19 @@ const handlePreviousPage = () => {
 
 const handleNextPage = () => {
   canvas.clear()
-  pagePointStates[currentPageIndex] = [...canvasPointStates]
+  pagePointStates[currentPageIndex] = [...canvas.getPointStateTimeline()]
   currentPageIndex++
 
   if (pagePointStates[currentPageIndex]) {
-    drawPoints(pagePointStates[currentPageIndex])
-    canvasPointStates = pagePointStates[currentPageIndex]
+    canvas.drawPoints({
+      cPoints: pagePointStates[currentPageIndex],
+      thickness,
+      movedLinesMapping: []
+    })
+    canvas.setPointStateTimeline(pagePointStates[currentPageIndex])
   } else {
     totalPages++
-    canvasPointStates = []
+    canvas.setPointStateTimeline([])
   }
   currentPageNum++
   pageNumber.innerText = `${currentPageNum} of ${totalPages}`
@@ -242,7 +255,11 @@ const handleToggleTheme = () => {
     COLORS.background = 'rgb(255,255,255)'
   }
   canvas.clear()
-  drawPoints(canvasPointStates)
+  canvas.drawPoints({
+    cPoints: canvas.getPointStateTimeline(),
+    thickness,
+    movedLinesMapping: []
+  })
   saveCanvasData()
 }
 
@@ -259,9 +276,7 @@ const handlePenLocked = () => {
 }
 
 const handleUndo = () => {
-  canvasPointStates.pop()
-  canvas.clear()
-  drawPoints(canvasPointStates)
+  canvas.undo(thickness)
   saveCanvasData()
 }
 
@@ -274,8 +289,8 @@ const handleSelector = () => {
 
   // Save all points in the selected area
   let numSelectionsCount = 0
-  for (let i = 0; i < canvasPointStates.length; i++) {
-    for (let point of canvasPointStates[i]) {
+  for (let i = 0; i < canvas.getPointStateTimeline().length; i++) {
+    for (let point of canvas.getPointStateTimeline()[i]) {
       if (
         point.x >= minSelectedX &&
         point.x <= maxSelectedX &&
@@ -288,14 +303,15 @@ const handleSelector = () => {
         if (
           !selectedLines.some(
             (line) =>
-              JSON.stringify(line) === JSON.stringify(canvasPointStates[i])
+              JSON.stringify(line) ===
+              JSON.stringify(canvas.getPointStateTimeline()[i])
           )
         ) {
-          selectedLines.push([...canvasPointStates[i]])
+          selectedLines.push([...canvas.getPointStateTimeline()[i]])
         }
         movedLinesMapping.push({
           originalLine: i,
-          movedLine: canvasPointStates.length + numSelectionsCount
+          movedLine: canvas.getPointStateTimeline().length + numSelectionsCount
         })
         numSelectionsCount++
         break // Currently if any pixel touches the selected area
@@ -305,8 +321,6 @@ const handleSelector = () => {
 }
 
 const handleEraserCursorThickness = () => {
-  cursorEraserWidth = eraserThickness
-  cursorEraserHeight = eraserThickness
   customEraserCursor.style.width = eraserThickness
   customEraserCursor.style.height = eraserThickness
 }
@@ -383,7 +397,7 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
         handleUndo()
         break
       case 'reset':
-        canvasPointStates = []
+        canvas.setPointStateTimeline([])
         canvas.clear()
         // Clear saved data
         localStorage.removeItem('ez-notes-data')
@@ -411,72 +425,6 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
   })
 })
 
-function drawPoints(cPoints) {
-  for (let i = 0; i < cPoints.length; i++) {
-    if (cPoints[i].length > 0) {
-      ctx.strokeStyle = cPoints[i][0].currentColor
-      ctx.lineWidth = cPoints[i][0].thick
-    }
-
-    // If line is selected and moved, don't draw original line
-    movedLinesMapping = []
-    /*
-    for (let lineMap of movedLinesMapping) {
-      if (lineMap.originalLine === i) lineMoved = true
-    }
-    if (lineMoved) continue
-    */
-    for (let pointIdx = 0; pointIdx < cPoints[i].length - 1; pointIdx++) {
-      // Connect two points
-      ctx.lineJoin = 'round'
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(cPoints[i][pointIdx].x, cPoints[i][pointIdx].y)
-      ctx.lineTo(cPoints[i][pointIdx + 1].x, cPoints[i][pointIdx + 1].y)
-      ctx.stroke()
-    }
-  }
-  // drawPoints changes line width to previous point's width, must change thickness back to current point
-  ctx.lineWidth = thickness
-}
-
-const deletePointsInEraserRadius = (x, y) => {
-  for (let i = 0; i < canvasPointStates.length; i++) {
-    for (
-      let pointIdx = 0;
-      pointIdx < canvasPointStates[i].length - 1;
-      pointIdx++
-    ) {
-      // Connect two points
-      const radius = eraserThickness / 2
-      let xDist = canvasPointStates[i][pointIdx].x - x
-      let yDist = canvasPointStates[i][pointIdx].y - y
-      if (xDist * xDist + yDist * yDist <= radius * radius) {
-        // If erasing in the middle, must split one line into two
-        // Otherwise lines won't render correctly
-
-        // Second line, insert new element at i+1
-        canvasPointStates.splice(
-          i + 1,
-          0,
-          [...canvasPointStates[i]].slice(
-            pointIdx + 1,
-            canvasPointStates[i].length
-          )
-        )
-        // First line
-        canvasPointStates[i] = canvasPointStates[i].slice(0, pointIdx)
-
-        // Filter out lines that don't contain points
-        canvasPointStates = canvasPointStates.filter((line) => line.length > 1)
-        pointIdx--
-      }
-    }
-  }
-  canvas.clear()
-  drawPoints(canvasPointStates)
-}
-
 window.addEventListener('mousedown', (e) => {
   if (isPenLocked) return
 
@@ -485,7 +433,7 @@ window.addEventListener('mousedown', (e) => {
 
   if (
     (y >= minY && y <= maxY && x >= minX && x <= maxX) ||
-    (!isPopUpHidden &&
+    (!isColorPickerPopUpHidden &&
       y >= popUpMinY &&
       y <= popUpMaxY &&
       x >= popUpMinX &&
@@ -494,17 +442,21 @@ window.addEventListener('mousedown', (e) => {
     return
 
   if (
-    !isPopUpHidden &&
+    !isColorPickerPopUpHidden &&
     !(y >= popUpMinY && y <= popUpMaxY && x >= popUpMinX && x <= popUpMaxX)
   ) {
-    isPopUpHidden = true
+    isColorPickerPopUpHidden = true
     colorPickerContainer.style.display = 'none'
   }
 
   // Remove selector outline
   if (selectorStartPoint) {
     canvas.clear()
-    drawPoints(canvasPointStates)
+    canvas.drawPoints({
+      cPoints: canvas.getPointStateTimeline(),
+      thickness,
+      movedLinesMapping: []
+    })
   }
 
   isMouseDown = true
@@ -514,7 +466,11 @@ window.addEventListener('mousedown', (e) => {
     if (previousPos.x !== x && previousPos.y !== y) {
       if (usingEraser) {
         // Search for points within eraser radius and delete them
-        deletePointsInEraserRadius(x, y)
+        canvas.deletePointsInRadius({
+          x,
+          y,
+          eraserThickness
+        })
       } else {
         currentPointState.push({
           x: pos.x,
@@ -578,11 +534,15 @@ window.addEventListener('mousemove', (e) => {
     selectorStartPoint &&
     usingSelectorTool &&
     isMouseDown &&
-    canvasPointStates.length > 0
+    canvas.getPointStateTimeline().length > 0
   ) {
     // Clear canvas and redraw last state (remove previous selector outline)
     canvas.clear()
-    drawPoints(canvasPointStates)
+    canvas.drawPoints({
+      cPoints: canvas.getPointStateTimeline(),
+      thickness,
+      movedLinesMapping: []
+    })
     ctx.lineWidth = '2'
     ctx.setLineDash([10])
     ctx.strokeStyle = 'GRAY'
@@ -610,7 +570,7 @@ window.addEventListener('mousemove', (e) => {
     lastSelectedPoints.y = y
 
     // Update selectedLines points
-    const tempLines = [...canvasPointStates]
+    const tempLines = [...canvas.getPointStateTimeline()]
     for (let line of selectedLines) {
       for (let point of line) {
         point.x += distX
@@ -620,7 +580,11 @@ window.addEventListener('mousemove', (e) => {
     }
 
     canvas.clear()
-    drawPoints(tempLines)
+    canvas.drawPoints({
+      cPoints: tempLines,
+      thickness,
+      movedLinesMapping: []
+    })
   }
 })
 
@@ -634,7 +598,11 @@ window.addEventListener('mouseup', (e) => {
 
   if (hasMovedSelectedArea && movingSelectedArea) {
     canvas.clear()
-    drawPoints(canvasPointStates)
+    canvas.drawPoints({
+      cPoints: canvas.getPointStateTimeline(),
+      thickness,
+      movedLinesMapping: []
+    })
 
     movingSelectedArea = false
     hasMovedSelectedArea = false
@@ -645,7 +613,7 @@ window.addEventListener('mouseup', (e) => {
     // Don't register if inside toolbar or color tool popup
     if (
       (y >= minY && y <= maxY && x >= minX && x <= maxX) ||
-      (!isPopUpHidden &&
+      (!isColorPickerPopUpHidden &&
         y >= popUpMinY &&
         y <= popUpMaxY &&
         x >= popUpMinX &&
@@ -653,7 +621,8 @@ window.addEventListener('mouseup', (e) => {
     )
       return
 
-    if (!usingEraser) canvasPointStates.push([...currentPointState])
+    if (!usingEraser)
+      canvas.getPointStateTimeline().push([...currentPointState])
 
     currentPointState = []
   } else {
@@ -662,11 +631,18 @@ window.addEventListener('mouseup', (e) => {
   }
 
   canvas.clear()
-  drawPoints(canvasPointStates)
+  canvas.drawPoints({
+    cPoints: canvas.getPointStateTimeline(),
+    thickness,
+    movedLinesMapping: []
+  })
   saveCanvasData()
 })
 
 const init = () => {
+  // Init Event Listeners
+  new WallpaperPropertyListener(canvas, thickness)
+
   ctx.fillStyle = COLORS.background
   ctx.fillRect(0, 0, canvas.getCW(), canvas.cH)
   ctx.lineWidth = 4
@@ -751,8 +727,8 @@ const saveCanvasData = () => {
     }
 
     // Save current page data to pagePointStates
-    if (pagePointStates[currentPageIndex] !== canvasPointStates) {
-      pagePointStates[currentPageIndex] = [...canvasPointStates]
+    if (pagePointStates[currentPageIndex] !== canvas.getPointStateTimeline()) {
+      pagePointStates[currentPageIndex] = [...canvas.getPointStateTimeline()]
     }
 
     // Store data as a JSON string and use simplified format to reduce size
@@ -842,10 +818,14 @@ const loadCanvasData = () => {
           COLORS.background = savedData.theme
         }
 
-        canvasPointStates = pagePointStates[currentPageIndex] || []
+        canvas.setPointStateTimeline(pagePointStates[currentPageIndex] || [])
         pageNumber.innerText = `${currentPageNum} of ${totalPages}`
         canvas.clear()
-        drawPoints(canvasPointStates)
+        canvas.drawPoints({
+          cPoints: canvas.getPointStateTimeline(),
+          thickness,
+          movedLinesMapping: []
+        })
         console.log(
           'Data load successful, page count: ' + pagePointStates.length
         )
@@ -855,32 +835,6 @@ const loadCanvasData = () => {
     }
   } catch (e) {
     console.error('Load data failed:', e)
-  }
-}
-
-// Wallpaper Engine property listener
-window.wallpaperPropertyListener = {
-  applyUserProperties: function (properties) {
-    // Process auto-save setting
-    if (properties.autoSave !== undefined) {
-      // Update auto-save setting
-      window.autoSaveEnabled = properties.autoSave.value
-      console.log('Auto-save setting: ' + window.autoSaveEnabled)
-    }
-
-    // Process theme color change
-    if (properties.schemeColor) {
-      // Theme color can be applied
-      const color = properties.schemeColor.value.split(' ')
-      const r = Math.ceil(color[0] * 255)
-      const g = Math.ceil(color[1] * 255)
-      const b = Math.ceil(color[2] * 255)
-      const customColor = `rgb(${r}, ${g}, ${b})`
-      COLORS.background = customColor
-
-      canvas.clear()
-      drawPoints(canvasPointStates)
-    }
   }
 }
 
