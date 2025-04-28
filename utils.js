@@ -1,3 +1,4 @@
+import { COLORS } from './config.js'
 export function addCustomColorSliderListeners(toolbar) {
   const redSlider = document.getElementById('red-slider')
   const greenSlider = document.getElementById('green-slider')
@@ -49,5 +50,19 @@ export function addWallpaperPropertyListener(canvas, thickness) {
         })
       }
     }
+  }
+}
+
+export function addWindowResizeListener({ canvas, thickness, toolbar }) {
+  window.onresize = () => {
+    canvas.setCW(window.innerWidth)
+    canvas.setCH(window.innerHeight)
+
+    ctx.fillStyle = COLORS.background
+    ctx.fillRect(0, 0, canvas.getCW(), canvas.getCH())
+
+    ctx.lineWidth = thickness
+
+    toolbar.initDimensions()
   }
 }

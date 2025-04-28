@@ -2,7 +2,8 @@ import { COLORS } from './config.js'
 import { saveCanvasData, loadCanvasData } from './autosaveUtils.js'
 import {
   addCustomColorSliderListeners,
-  addWallpaperPropertyListener
+  addWallpaperPropertyListener,
+  addWindowResizeListener
 } from './utils.js'
 import Canvas from './Canvas.js'
 import Toolbar from './Toolbar.js'
@@ -54,18 +55,6 @@ let minSelectedX, maxSelectedX, minSelectedY, maxSelectedY
 // Custom dynamic eraser cursor
 customEraserCursor.style.width = eraserThickness
 customEraserCursor.style.height = eraserThickness
-
-window.onresize = () => {
-  canvas.setCW(window.innerWidth)
-  canvas.setCH(window.innerHeight)
-
-  ctx.fillStyle = COLORS.background
-  ctx.fillRect(0, 0, canvas.getCW(), canvas.getCH())
-
-  ctx.lineWidth = thickness
-
-  toolbar.initDimensions()
-}
 
 function update() {
   const diffx = pos.x - previousPos.x
@@ -171,7 +160,12 @@ function handleNextPage() {
   }
   currentPageNum++
   pageNumber.innerText = `${currentPageNum} of ${totalPages}`
-  saveCanvasData()
+  saveCanvasData({
+    canvas,
+    pagePointStates,
+    currentPageIndex,
+    totalPages
+  })
 }
 
 function handleToggleTheme() {
@@ -200,7 +194,12 @@ function handleToggleTheme() {
     thickness,
     movedLinesMapping: []
   })
-  saveCanvasData()
+  saveCanvasData({
+    canvas,
+    pagePointStates,
+    currentPageIndex,
+    totalPages
+  })
 }
 
 function handlePenLocked() {
@@ -217,7 +216,12 @@ function handlePenLocked() {
 
 function handleUndo() {
   canvas.undo(thickness)
-  saveCanvasData()
+  saveCanvasData({
+    canvas,
+    pagePointStates,
+    currentPageIndex,
+    totalPages
+  })
 }
 
 function handleSelector() {
@@ -568,6 +572,7 @@ function init() {
 
   addCustomColorSliderListeners(toolbar)
   addWallpaperPropertyListener(canvas, thickness)
+  addWindowResizeListener({ canvas, thickness, toolbar })
 
   // Auto-save enabled by default
   window.autoSaveEnabled = true
