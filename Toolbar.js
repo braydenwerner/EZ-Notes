@@ -1,3 +1,5 @@
+import { COLORS } from './config.js'
+
 export default class Toolbar {
   constructor() {
     this.element = document.getElementById('toolbar')
@@ -11,6 +13,7 @@ export default class Toolbar {
     this.initDimensions()
 
     this.isColorPickerPopUpHidden = true
+    this.selectedColor = COLORS.purple
 
     this.colorPickerButton.addEventListener('click', () => {
       this.isColorPickerPopUpHidden = !this.isColorPickerPopUpHidden
@@ -100,6 +103,14 @@ export default class Toolbar {
 
   getIsColorPickerPopUpHidden() {
     return this.isColorPickerPopUpHidden
+  }
+
+  getSelectedColor() {
+    return this.selectedColor
+  }
+
+  setSelectedColor(color) {
+    this.selectedColor = color
   }
 
   setIsColorPickerPopUpHidden(isColorPickerPopUpHidden) {

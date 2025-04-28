@@ -1,15 +1,12 @@
 import { COLORS } from './config.js'
 import { saveCanvasData, loadCanvasData } from './autosaveUtils.js'
+import {
+  addCustomColorSliderListeners,
+  addWallpaperPropertyListener
+} from './utils.js'
 import Canvas from './Canvas.js'
 import Toolbar from './Toolbar.js'
-import WallpaperPropertyListener from './WallpaperPropertyListener.js'
 
-const redSlider = document.getElementById('red-slider')
-const greenSlider = document.getElementById('green-slider')
-const blueSlider = document.getElementById('blue-slider')
-const colorRedValue = document.getElementById('color-red-value')
-const colorGreenValue = document.getElementById('color-green-value')
-const colorBlueValue = document.getElementById('color-blue-value')
 const toggleTheme = document.getElementById('toggle-theme')
 const customEraserCursor = document.getElementById('custom-eraser-cursor')
 const penLock = document.getElementById('pen-lock')
@@ -22,9 +19,8 @@ const ctx = canvas.getCtx()
 
 const toolbar = new Toolbar()
 
-let currentColor = COLORS.purple
-let previousButton
 let thickness = sliderPen.value
+let previousButton
 let eraserThickness = sliderEraser.value
 let currentPageIndex = 0
 let currentPageNum = 1
@@ -71,7 +67,7 @@ window.onresize = () => {
   toolbar.initDimensions()
 }
 
-const update = () => {
+function update() {
   const diffx = pos.x - previousPos.x
   const diffy = pos.y - previousPos.y
   const diffsq = diffx * diffx + diffy * diffy
@@ -83,7 +79,7 @@ const update = () => {
 
       // Minimum 5 subpoints
       const numSubpoints = Math.max(5, diffsq / 2950)
-      ctx.strokeStyle = currentColor
+      ctx.strokeStyle = toolbar.getSelectedColor()
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
       ctx.lineWidth = thickness
@@ -97,7 +93,7 @@ const update = () => {
         currentPointState.push({
           x: previousPos.x + i * (diffx / numSubpoints),
           y: previousPos.y + i * (diffy / numSubpoints),
-          currentColor,
+          currentColor: toolbar.getSelectedColor(),
           thick: thickness
         })
         ctx.beginPath()
@@ -119,28 +115,6 @@ const update = () => {
   }
 }
 
-const setCustomColor = () => {
-  colorRedValue.innerText = 'R: ' + redSlider.value
-  colorGreenValue.innerText = 'G: ' + greenSlider.value
-  colorBlueValue.innerText = 'B: ' + blueSlider.value
-
-  COLORS.customColor = `rgb(${redSlider.value},${greenSlider.value}, ${blueSlider.value})`
-  currentColor = COLORS.customColor
-  toolbar.colorPickerButton.style.backgroundColor = COLORS.customColor
-}
-
-redSlider.addEventListener('input', () => {
-  setCustomColor()
-})
-
-greenSlider.addEventListener('input', () => {
-  setCustomColor()
-})
-
-blueSlider.addEventListener('input', () => {
-  setCustomColor()
-})
-
 sliderPen.addEventListener('input', () => {
   thickness = sliderPen.value
   if (!usingEraser) {
@@ -156,7 +130,7 @@ sliderEraser.addEventListener('input', () => {
   handleEraserCursorThickness()
 })
 
-const handlePreviousPage = () => {
+function handlePreviousPage() {
   // Check if previous page exists
   if (currentPageIndex === 0) return
 
@@ -179,7 +153,7 @@ const handlePreviousPage = () => {
   })
 }
 
-const handleNextPage = () => {
+function handleNextPage() {
   canvas.clear()
   pagePointStates[currentPageIndex] = [...canvas.getPointStateTimeline()]
   currentPageIndex++
@@ -200,7 +174,7 @@ const handleNextPage = () => {
   saveCanvasData()
 }
 
-const handleToggleTheme = () => {
+function handleToggleTheme() {
   // Check if current background color is close to white
   const isLightTheme =
     COLORS.background.includes('255,255,255') ||
@@ -229,7 +203,7 @@ const handleToggleTheme = () => {
   saveCanvasData()
 }
 
-const handlePenLocked = () => {
+function handlePenLocked() {
   isPenLocked = !isPenLocked
 
   if (isPenLocked) {
@@ -241,12 +215,12 @@ const handlePenLocked = () => {
   }
 }
 
-const handleUndo = () => {
+function handleUndo() {
   canvas.undo(thickness)
   saveCanvasData()
 }
 
-const handleSelector = () => {
+function handleSelector() {
   // Get all points between top-left and bottom-right corners
   minSelectedX = Math.min(selectorStartPoint.x, selectorEndPoint.x)
   maxSelectedX = Math.max(selectorStartPoint.x, selectorEndPoint.x)
@@ -286,7 +260,7 @@ const handleSelector = () => {
   }
 }
 
-const handleEraserCursorThickness = () => {
+function handleEraserCursorThickness() {
   customEraserCursor.style.width = eraserThickness
   customEraserCursor.style.height = eraserThickness
 }
@@ -328,27 +302,27 @@ document.querySelectorAll('.pen-color').forEach((colorButton) => {
     switch (colorButton.id) {
       case 'color-picker-button':
         colorButton.style.backgroundColor = COLORS.customColor
-        currentColor = COLORS.customColor
+        toolbar.setSelectedColor(COLORS.customColor)
         break
       case 'pen-purple':
         colorButton.style.backgroundColor = COLORS.darkPurple
-        currentColor = COLORS.purple
+        toolbar.setSelectedColor(COLORS.purple)
         break
       case 'pen-red':
         colorButton.style.backgroundColor = COLORS.darkRed
-        currentColor = COLORS.red
+        toolbar.setSelectedColor(COLORS.red)
         break
       case 'pen-blue':
         colorButton.style.backgroundColor = COLORS.darkBlue
-        currentColor = COLORS.blue
+        toolbar.setSelectedColor(COLORS.blue)
         break
       case 'pen-green':
         colorButton.style.backgroundColor = COLORS.darkGreen
-        currentColor = COLORS.green
+        toolbar.setSelectedColor(COLORS.green)
         break
       case 'pen-yellow':
         colorButton.style.backgroundColor = COLORS.darkYellow
-        currentColor = COLORS.yellow
+        toolbar.setSelectedColor(COLORS.yellow)
         break
       case 'eraser':
         usingEraser = true
@@ -426,7 +400,7 @@ window.addEventListener('mousedown', (e) => {
         currentPointState.push({
           x: pos.x,
           y: pos.y,
-          currentColor,
+          currentColor: toolbar.getSelectedColor(),
           thick: thickness
         })
       }
@@ -440,14 +414,14 @@ window.addEventListener('mousedown', (e) => {
     previousPos.y = y
 
     // Draw single point
-    ctx.strokeStyle = currentColor
+    ctx.strokeStyle = toolbar.getSelectedColor()
     ctx.beginPath()
     ctx.moveTo(x - 1, y - 1)
     ctx.lineTo(x + 1, y + 1)
     currentPointState.push({
       x: x - 1,
       y: y - 1,
-      currentColor,
+      currentColor: toolbar.getSelectedColor(),
       thick: thickness
     })
     ctx.stroke()
@@ -587,13 +561,13 @@ window.addEventListener('mouseup', (e) => {
   })
 })
 
-const init = () => {
-  // Init Event Listeners
-  new WallpaperPropertyListener(canvas, thickness)
-
+function init() {
   ctx.fillStyle = COLORS.background
   ctx.fillRect(0, 0, canvas.getCW(), canvas.getCH())
   ctx.lineWidth = 4
+
+  addCustomColorSliderListeners(toolbar)
+  addWallpaperPropertyListener(canvas, thickness)
 
   // Auto-save enabled by default
   window.autoSaveEnabled = true
@@ -630,5 +604,4 @@ const init = () => {
 
   setInterval(update, 0)
 }
-
 init()
