@@ -1,4 +1,5 @@
 import { COLORS } from './config.js'
+
 export function addCustomColorSliderListeners(toolbar) {
   const redSlider = document.getElementById('red-slider')
   const greenSlider = document.getElementById('green-slider')

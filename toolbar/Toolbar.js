@@ -1,9 +1,9 @@
-import { COLORS } from './config.js'
+import { COLORS } from '../config.js'
 
 export default class Toolbar {
   constructor() {
     this.element = document.getElementById('toolbar')
-    this.colorPickerButton = document.getElementById('color-picker-button')
+    this.colorPickerButton = document.getElementById('pen-custom')
     this.colorPickerContainer = document.getElementById(
       'color-picker-container'
     )

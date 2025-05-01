@@ -1,266 +1,267 @@
- html, body {
-     width: 100%;
-     height: 100%;
-     margin: 0px;
-     border: 0;
-     overflow: hidden;
- }
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  border: 0;
+  overflow: hidden;
+}
 
- #custom-eraser-cursor {
-     position: absolute;
-     pointer-events: none;
-     display: none;
-     z-index: 2;
- }
+#custom-eraser-cursor {
+  position: absolute;
+  pointer-events: none;
+  display: none;
+  z-index: 2;
+}
 
- #color-picker-container {
-     position: absolute;
-     display: none;
-     margin-top: 80px;
-     align-items: center;
-     justify-content: center;
-     background-color: rgb(73, 77, 85);
-     font-family: Verdana;
-     color: #DCDEDC;
-     border-radius: 7px;
- }
+#color-picker-container {
+  position: absolute;
+  display: none;
+  margin-top: 80px;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(73, 77, 85);
+  font-family: Verdana;
+  color: #dcdedc;
+  border-radius: 7px;
+}
 
- .color-picker-sub {
-     display: flex;
-     flex-direction: row;
- }
+.color-picker-sub {
+  display: flex;
+  flex-direction: row;
+}
 
- .color-slider-container {
-     width: 70%
- }
+.color-slider-container {
+  width: 70%;
+}
 
- .color-value {
-     margin-left: 10px;
-     color: WHITE;
- }
+.color-value {
+  margin-left: 10px;
+  color: WHITE;
+}
 
- #page-number-container {
-     font-family: Verdana;
-     color: #DCDEDC;
-     z-index: 1;
-     user-select: none;
-     width: 70px;
-     text-align: center;
- }
+#page-number-container {
+  font-family: Verdana;
+  color: #dcdedc;
+  z-index: 1;
+  user-select: none;
+  width: 70px;
+  text-align: center;
+}
 
- #page-number {
-     width: 100%;
- }
+#page-number {
+  width: 100%;
+}
 
- #pen-outer-container {
-     width: 100%;
-     display: flex;
-     position: absolute;
- }
+#pen-outer-container {
+  width: 100%;
+  display: flex;
+  position: absolute;
+}
 
- #toolbar {
-     display: flex;
-     position: absolute;
-     left: 50%;
-     -webkit-transform: translateX(-50%);
-     transform: translateX(-50%);
-     justify-content: space-around;
-     align-items: center;
-     margin-top: 20px;
-     width: 930px;
-     height: 55px;
-     background-color: rgb(73, 77, 85);
-     border-radius: 4px;
- }
+#toolbar {
+  display: flex;
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 20px;
+  width: 930px;
+  height: 55px;
+  background-color: rgb(73, 77, 85);
+  border-radius: 4px;
+}
 
- .pen-color {
-     display: flex;
-     outline: none;
-     border: none;
-     margin-left: 15px;
-     width: 35px;
-     height: 35px;
-     border-radius: 5px;
- }
+.toolbar-item {
+  display: flex;
+  outline: none;
+  border: none;
+  margin-left: 15px;
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+}
 
- .pen-color:hover {
-     transform: translateY(-3px);
- }
+.toolbar-item:hover {
+  transform: translateY(-3px);
+}
 
- #color-picker-button {
-     border: 2px solid black;
-     text-align: center;
-     font-size: 25px;
- }
+#pen-custom {
+  border: 2px solid black;
+  text-align: center;
+  font-size: 25px;
+}
 
- #pen-inner-col-1 {
-     display: flex;
- }
+#pen-inner-col-1 {
+  display: flex;
+}
 
- #pen-inner-col-2 {
-     display: flex;
-     align-items: center;
-     justify-content: space-around;
- }
+#pen-inner-col-2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
 
- #slider-container {
-     width: 140px;
- }
+#slider-container {
+  width: 140px;
+}
 
- #input-color {
-     padding: 0;
-     border: none;
-     outline: none;
-     width: 32px;
-     height: 32px;
- }
+#input-color {
+  padding: 0;
+  border: none;
+  outline: none;
+  width: 32px;
+  height: 32px;
+}
 
- #previous-page {
-     margin-top: 1px;
-     background: url('./assets//backarrow.png');
-     background-repeat: no-repeat;
- }
+#previous-page {
+  margin-top: 1px;
+  background: url('./assets//backarrow.png');
+  background-repeat: no-repeat;
+}
 
- #next-page {
-     margin-top: 1px;
-     background: url('./assets//forwardarrow.png');
-     background-repeat: no-repeat;
- }
+#next-page {
+  margin-top: 1px;
+  background: url('./assets//forwardarrow.png');
+  background-repeat: no-repeat;
+}
 
- #toggle-theme {
-     margin-top: 1px;
-     background: url('./assets/moon.png');
-     background-repeat: no-repeat;
-     filter: invert(1);
- }
+#toggle-theme {
+  margin-top: 1px;
+  background: url('./assets/moon.png');
+  background-repeat: no-repeat;
+  filter: invert(1);
+}
 
- #selector {
-     margin-top: 4px;
-     background: url('./assets/selector.png');
-     background-repeat: no-repeat;
- }
+#selector {
+  margin-top: 4px;
+  background: url('./assets/selector.png');
+  background-repeat: no-repeat;
+}
 
- #eraser {
-     margin-top: 15px;
-     background: url('./assets/eraser.png');
-     background-repeat: no-repeat;
- }
+#eraser {
+  margin-top: 15px;
+  background: url('./assets/eraser.png');
+  background-repeat: no-repeat;
+}
 
- #undo {
-     margin-top: 2px;
-     background: url('./assets/undo.png');
-     background-repeat: no-repeat;
- }
+#undo {
+  margin-top: 2px;
+  background: url('./assets/undo.png');
+  background-repeat: no-repeat;
+}
 
- #reset {
-     margin-top: 2px;
-     background: url('./assets/reset.png');
-     background-repeat: no-repeat;
- }
+#reset {
+  margin-top: 2px;
+  background: url('./assets/reset.png');
+  background-repeat: no-repeat;
+}
 
- #pen-lock {
-     background: url('./assets/open-padlock.png');
-     background-repeat: no-repeat;
-     filter: invert(1);
-     margin-left: 5px;
-     margin-right: 5px;
- }
+#pen-lock {
+  background: url('./assets/open-padlock.png');
+  background-repeat: no-repeat;
+  filter: invert(1);
+  margin-left: 5px;
+  margin-right: 5px;
+}
 
- input[type=range] {
-     width: 100%;
-     margin: 4.9px 0;
-     background-color: transparent;
-     -webkit-appearance: none;
- }
+input[type='range'] {
+  width: 100%;
+  margin: 4.9px 0;
+  background-color: transparent;
+  -webkit-appearance: none;
+}
 
- input[type=range]:focus {
-     outline: none;
- }
+input[type='range']:focus {
+  outline: none;
+}
 
- input[type=range]::-webkit-slider-runnable-track {
-     background: rgba(34, 36, 40, 0.7);
-     border: 0.5px solid rgba(0, 0, 0, 0);
-     border-radius: 1px;
-     width: 100%;
-     height: 6.2px;
- }
+input[type='range']::-webkit-slider-runnable-track {
+  background: rgba(34, 36, 40, 0.7);
+  border: 0.5px solid rgba(0, 0, 0, 0);
+  border-radius: 1px;
+  width: 100%;
+  height: 6.2px;
+}
 
- input[type=range]::-webkit-slider-thumb {
-     margin-top: -5.4px;
-     width: 23px;
-     height: 16px;
-     background: #c8cac8;
-     border: 2.5px solid #c8cac8;
-     border-radius: 12px;
-     -webkit-appearance: none;
- }
+input[type='range']::-webkit-slider-thumb {
+  margin-top: -5.4px;
+  width: 23px;
+  height: 16px;
+  background: #c8cac8;
+  border: 2.5px solid #c8cac8;
+  border-radius: 12px;
+  -webkit-appearance: none;
+}
 
- input[type=range]:focus::-webkit-slider-runnable-track {
-     background: #2e3036;
- }
+input[type='range']:focus::-webkit-slider-runnable-track {
+  background: #2e3036;
+}
 
- input[type=range]::-moz-range-track {
-     background: rgba(34, 36, 40, 0.7);
-     border: 0.5px solid rgba(0, 0, 0, 0);
-     border-radius: 1px;
-     width: 100%;
-     height: 6.2px;
- }
+input[type='range']::-moz-range-track {
+  background: rgba(34, 36, 40, 0.7);
+  border: 0.5px solid rgba(0, 0, 0, 0);
+  border-radius: 1px;
+  width: 100%;
+  height: 6.2px;
+}
 
- input[type=range]::-moz-range-thumb {
-     width: 23px;
-     height: 16px;
-     background: #c8cac8;
-     border: 2.5px solid #c8cac8;
-     border-radius: 12px;
- }
+input[type='range']::-moz-range-thumb {
+  width: 23px;
+  height: 16px;
+  background: #c8cac8;
+  border: 2.5px solid #c8cac8;
+  border-radius: 12px;
+}
 
- input[type=range]::-ms-track {
-     background: transparent;
-     border-color: transparent;
-     border-width: 7.5px 0;
-     color: transparent;
-     width: 100%;
-     height: 6.2px;
- }
+input[type='range']::-ms-track {
+  background: transparent;
+  border-color: transparent;
+  border-width: 7.5px 0;
+  color: transparent;
+  width: 100%;
+  height: 6.2px;
+}
 
- input[type=range]::-ms-fill-lower {
-     background: #16181a;
-     border: 0.5px solid rgba(0, 0, 0, 0);
-     border-radius: 2px;
- }
+input[type='range']::-ms-fill-lower {
+  background: #16181a;
+  border: 0.5px solid rgba(0, 0, 0, 0);
+  border-radius: 2px;
+}
 
- input[type=range]::-ms-fill-upper {
-     background: rgba(34, 36, 40, 0.7);
-     border: 0.5px solid rgba(0, 0, 0, 0);
-     border-radius: 2px;
- }
+input[type='range']::-ms-fill-upper {
+  background: rgba(34, 36, 40, 0.7);
+  border: 0.5px solid rgba(0, 0, 0, 0);
+  border-radius: 2px;
+}
 
- input[type=range]::-ms-thumb {
-     width: 23px;
-     height: 16px;
-     background: #c8cac8;
-     border: 2.5px solid #c8cac8;
-     border-radius: 12px;
-     margin-top: 0px;
-     /*Needed to keep the Edge thumb centred*/
- }
+input[type='range']::-ms-thumb {
+  width: 23px;
+  height: 16px;
+  background: #c8cac8;
+  border: 2.5px solid #c8cac8;
+  border-radius: 12px;
+  margin-top: 0px;
+  /*Needed to keep the Edge thumb centred*/
+}
 
- input[type=range]:focus::-ms-fill-lower {
-     background: rgba(34, 36, 40, 0.7);
- }
+input[type='range']:focus::-ms-fill-lower {
+  background: rgba(34, 36, 40, 0.7);
+}
 
- input[type=range]:focus::-ms-fill-upper {
-     background: #2e3036;
- }
+input[type='range']:focus::-ms-fill-upper {
+  background: #2e3036;
+}
 
- /*TODO: Use one of the selectors from https://stackoverflow.com/a/20541859/7077589 and figure out
+/*TODO: Use one of the selectors from https://stackoverflow.com/a/20541859/7077589 and figure out
   how to remove the virtical space around the range input in IE*/
 
- @supports (-ms-ime-align:auto) {
-     /* Pre-Chromium Edge only styles, selector taken from hhttps://stackoverflow.com/a/32202953/7077589 */
-     input[type=range] {
-         margin: 0;
-         /*Edge starts the margin from the thumb, not the track as other browsers do*/
-     }
- }
+@supports (-ms-ime-align: auto) {
+  /* Pre-Chromium Edge only styles, selector taken from hhttps://stackoverflow.com/a/32202953/7077589 */
+  input[type='range'] {
+    margin: 0;
+    /*Edge starts the margin from the thumb, not the track as other browsers do*/
+  }
+}

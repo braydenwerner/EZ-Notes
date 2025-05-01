@@ -39,35 +39,35 @@
 
     <div id="pen-outer-container">
         <div id="toolbar">
+            <button style="background-color: rgb(255,255,255)" class="toolbar-item" id="pen-custom">C</button>
             <div id="pen-inner-col-1">
-                <button style="background-color: rgb(255,255,255)" class="pen-color" id="color-picker-button">C</button>
-                <button style="background-color:rgb(198, 120, 221)" class="pen-color" id="pen-purple"></button>
-                <button style="background-color:rgb(224, 108, 117)" class=" pen-color" id="pen-red"></button>
-                <button style="background-color: rgb(0, 194, 182)" class="pen-color" id="pen-blue"></button>
-                <button style="background-color: rgb(152, 195, 121)" class="pen-color" id="pen-green"></button>
-                <button style="background-color: rgb(229, 192, 123)" class="pen-color" id="pen-yellow"></button>
+                <button style="background-color:rgb(198, 120, 221)" class="toolbar-item" id="pen-purple"></button>
+                <button style="background-color:rgb(224, 108, 117)" class=" toolbar-item" id="pen-red"></button>
+                <button style="background-color: rgb(0, 194, 182)" class="toolbar-item" id="pen-blue"></button>
+                <button style="background-color: rgb(152, 195, 121)" class="toolbar-item" id="pen-green"></button>
+                <button style="background-color: rgb(229, 192, 123)" class="toolbar-item" id="pen-yellow"></button>
             </div>
             <div id="pen-inner-col-2">
                 <div id="slider-container">
                     <input type="range" min="3" max="25" value="4" class="slider" id="slider-pen">
                     <input type="range" min="20" max="100" value="60" class="slider" id="slider-eraser">
                 </div>
-                <button class="pen-color" id="previous-page"></button>
+                <button class="toolbar-item" id="previous-page"></button>
                 <div id="page-number-container">
                     <div id="page-number">1 of 1</div>
                 </div>
-                <button class="pen-color" id="next-page"></button>
-                <button class="pen-color" id="toggle-theme"></button>
-                <button class="pen-color" id="selector"></button>
-                <button class="pen-color" id="eraser"></button>
-                <button class="pen-color" id="undo"></button>
-                <button class="pen-color" id="reset"></button>
-                <button class="pen-color" id="pen-lock"></button>
+                <button class="toolbar-item" id="toggle-theme"></button>
+                <button class="toolbar-item" id="next-page"></button>
+                <button class="toolbar-item" id="selector"></button>
+                <button class="toolbar-item" id="eraser"></button>
+                <button class="toolbar-item" id="undo"></button>
+                <button class="toolbar-item" id="reset"></button>
+                <button class="toolbar-item" id="pen-lock"></button>
             </div>
         </div>
     </div>
     <canvas id="canvas"></canvas>
-    <script defer src="./wallpaper.js" type="module"></script>
+    <script defer src="./index.js" type="module"></script>
 </body>
 
 </html>
