@@ -159,7 +159,7 @@ body {
   background-repeat: no-repeat;
 }
 
-#pen-lock {
+#lock {
   background: url('./assets/open-padlock.png');
   background-repeat: no-repeat;
   filter: invert(1);

@@ -1,4 +1,5 @@
 import { COLORS } from './config.js'
+import { wallpaper } from './index.js'
 
 export function addCustomColorSliderListeners(toolbar) {
   const redSlider = document.getElementById('red-slider')
@@ -54,7 +55,7 @@ export function addWallpaperPropertyListener(canvas, thickness) {
   }
 }
 
-export function addWindowResizeListener({ canvas, thickness, toolbar }) {
+export function addWindowResizeListener({ ctx, canvas, thickness, toolbar }) {
   window.onresize = () => {
     canvas.setCW(window.innerWidth)
     canvas.setCH(window.innerHeight)

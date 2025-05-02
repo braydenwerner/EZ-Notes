@@ -1,3 +1,4 @@
+// @TODO: Fix bugs with pagination
 import { COLORS } from './config.js'
 import { saveCanvasData, loadCanvasData } from './autosave.js'
 import {
@@ -11,13 +12,18 @@ import Toolbar from './toolbar/Toolbar.js'
 import SliderPen from './toolbar/SliderPen.js'
 import SliderEraser from './toolbar/SliderEraser.js'
 import PenColors from './toolbar/PenColors.js'
+import Eraser from './toolbar/Eraser.js'
+import Selector from './toolbar/Selector.js'
+import Undo from './toolbar/Undo.js'
+import Reset from './toolbar/Reset.js'
+import Pagination from './toolbar/Pagination.js'
+import Theme from './toolbar/Theme.js'
+import Lock from './toolbar/Lock.js'
 
 export default class Wallpaper {
   constructor() {
     // HTML Elements
-    this.toggleTheme = document.getElementById('toggle-theme')
     this.customEraserCursor = document.getElementById('custom-eraser-cursor')
-    this.penLock = document.getElementById('pen-lock')
     this.pageNumber = document.getElementById('page-number')
 
     // State
@@ -41,6 +47,11 @@ export default class Wallpaper {
     this.selectorEndPoint
     this.lastSelectedPoints
 
+    this.minSelectedX
+    this.maxSelectedX
+    this.minSelectedY
+    this.maxSelectedY
+
     // Create a smaller array to add to the total canvas state array
     this.currentPointState = []
     // Array containing canvasPointStates for each page
@@ -51,15 +62,11 @@ export default class Wallpaper {
     // value=index in canvasPointStates of new position after selection and movement
     this.movedLinesMapping = []
 
-    this.minSelectedX
-    this.maxSelectedX
-    this.minSelectedY
-    this.maxSelectedY
-
     // Initialize components
     this.canvas = new Canvas()
     this.ctx = this.canvas.getCtx()
 
+    // @TODO: Stop prop drilling
     this.toolbar = new Toolbar()
 
     this.sliderPen = new SliderPen({
@@ -78,117 +85,72 @@ export default class Wallpaper {
       getIsPenLocked: this.getIsPenLocked.bind(this),
       getCustomEraserCursor: this.getCustomEraserCursor.bind(this),
       getPreviousButton: this.getPreviousButton.bind(this),
-      setUsingEraser: this.setUsingEraser.bind(this),
-      setUsingSelectorTool: this.setUsingSelectorTool.bind(this),
       setSelectedColor: this.setSelectedColor.bind(this),
-      setPreviousButton: this.setPreviousButton.bind(this)
+      setPreviousButton: this.setPreviousButton.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this)
+    })
+
+    this.eraser = new Eraser({
+      setUsingEraser: this.setUsingEraser.bind(this),
+      getCustomEraserCursor: this.getCustomEraserCursor.bind(this),
+      getEraserThickness: this.getEraserThickness.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this)
+    })
+
+    this.selector = new Selector({
+      setUsingSelectorTool: this.setUsingSelectorTool.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this),
+      getSelectorStartPoint: this.getSelectorStartPoint.bind(this),
+      getSelectorEndPoint: this.getSelectorEndPoint.bind(this),
+      getCanvas: this.getCanvas.bind(this),
+      getMovedLinesMapping: this.getMovedLinesMapping.bind(this),
+      getSelectedLines: this.getSelectedLines.bind(this),
+      setSelectedDimensions: this.setSelectedDimensions.bind(this)
+    })
+
+    this.undo = new Undo({
+      getCanvas: this.getCanvas.bind(this),
+      getPagePointStates: this.getPagePointStates.bind(this),
+      getCurrentPageIndex: this.getCurrentPageIndex.bind(this),
+      getTotalPages: this.getTotalPages.bind(this),
+      getThickness: this.getThickness.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this)
+    })
+
+    this.reset = new Reset({
+      getCanvas: this.getCanvas.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this)
+    })
+
+    this.pagination = new Pagination({
+      getCanvas: this.getCanvas.bind(this),
+      getPagePointStates: this.getPagePointStates.bind(this),
+      getCurrentPageIndex: this.getCurrentPageIndex.bind(this),
+      getTotalPages: this.getTotalPages.bind(this),
+      getThickness: this.getThickness.bind(this),
+      getPageNumber: this.getPageNumber.bind(this),
+      getCurrentPageNum: this.getCurrentPageNum.bind(this),
+      resetToolbarState: this.resetToolbarState.bind(this),
+      setSelectedLines: this.setSelectedLines.bind(this)
+    })
+
+    this.theme = new Theme({
+      getCanvas: this.getCanvas.bind(this),
+      getPagePointStates: this.getPagePointStates.bind(this),
+      getCurrentPageIndex: this.getCurrentPageIndex.bind(this),
+      getTotalPages: this.getTotalPages.bind(this),
+      getThickness: this.getThickness.bind(this)
+    })
+
+    this.lock = new Lock({
+      getIsPenLocked: this.getIsPenLocked.bind(this),
+      setIsPenLocked: this.setIsPenLocked.bind(this)
     })
 
     this.init()
   }
 
   init() {
-    // Add event listeners and background COLORS for pen color divs
-    document.querySelectorAll('.toolbar-item').forEach((colorButton) => {
-      colorButton.addEventListener('click', () => {
-        // When screen is locked, shouldn't be able to do anything except unlock screen
-        if (this.isPenLocked && colorButton.id !== 'pen-lock') return
-
-        this.usingEraser = false
-        this.usingSelectorTool = false
-
-        this.customEraserCursor.style.display = 'none'
-
-        // if (this.previousButton) {
-        //   switch (this.previousButton.id) {
-        //     case 'color-picker-button':
-        //       this.previousButton.style.backgroundColor = COLORS.customColor
-        //       break
-        //     case 'pen-purple':
-        //       this.previousButton.style.backgroundColor = COLORS.purple
-        //       break
-        //     case 'pen-red':
-        //       this.previousButton.style.backgroundColor = COLORS.red
-        //       break
-        //     case 'pen-blue':
-        //       this.previousButton.style.backgroundColor = COLORS.blue
-        //       break
-        //     case 'pen-green':
-        //       this.previousButton.style.backgroundColor = COLORS.green
-        //       break
-        //     case 'pen-yellow':
-        //       this.previousButton.style.backgroundColor = COLORS.yellow
-        //       break
-        //   }
-        // }
-
-        switch (colorButton.id) {
-          // case 'color-picker-button':
-          //   colorButton.style.backgroundColor = COLORS.customColor
-          //   this.toolbar.setSelectedColor(COLORS.customColor)
-          //   break
-          // case 'pen-purple':
-          //   colorButton.style.backgroundColor = COLORS.darkPurple
-          //   this.toolbar.setSelectedColor(COLORS.purple)
-          //   break
-          // case 'pen-red':
-          //   colorButton.style.backgroundColor = COLORS.darkRed
-          //   this.toolbar.setSelectedColor(COLORS.red)
-          //   break
-          // case 'pen-blue':
-          //   colorButton.style.backgroundColor = COLORS.darkBlue
-          //   this.toolbar.setSelectedColor(COLORS.blue)
-          //   break
-          // case 'pen-green':
-          //   colorButton.style.backgroundColor = COLORS.darkGreen
-          //   this.toolbar.setSelectedColor(COLORS.green)
-          //   break
-          // case 'pen-yellow':
-          //   colorButton.style.backgroundColor = COLORS.darkYellow
-          //   this.toolbar.setSelectedColor(COLORS.yellow)
-          //   break
-          case 'eraser':
-            this.usingEraser = true
-            this.customEraserCursor.style.display = 'initial'
-            // this.handleEraserCursorThickness()
-            break
-
-          case 'selector':
-            this.usingSelectorTool = true
-            break
-          case 'undo':
-            this.handleUndo()
-            break
-          case 'reset':
-            this.canvas.setPointStateTimeline([])
-            this.canvas.clear()
-            // Clear saved data
-            localStorage.removeItem('ez-notes-data')
-            // Clear all data block cookies
-            for (let i = 0; i <= 20; i++) {
-              document.cookie = `ez_data_${i}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-            }
-            document.cookie = `ez_data_chunks=0; path=/; max-age=31536000`
-            break
-          case 'previous-page':
-            this.handlePreviousPage()
-            break
-          case 'next-page':
-            this.handleNextPage()
-            break
-          case 'toggle-theme':
-            this.handleToggleTheme()
-            break
-          case 'pen-lock':
-            this.handlePenLocked()
-            break
-        }
-        this.ctx.lineWidth =
-          colorButton.id === 'eraser' ? this.eraserThickness : this.thickness
-        this.previousButton = colorButton
-      })
-    })
-
     window.addEventListener('mousedown', (e) => {
       if (this.isPenLocked) return
 
@@ -446,8 +408,13 @@ export default class Wallpaper {
 
         this.currentPointState = []
       } else {
+        // There is a race condition where if a user clicks a color button,
+        // it takes time for isUsingSelectorTool to be set to false because 'click' event is triggered
+        // after 'mouseup' event
+        if (!this.selectorStartPoint) return
+
         this.selectorEndPoint = { x: e.clientX, y: e.clientY }
-        this.handleSelector()
+        this.selector.handleSelector()
       }
 
       this.canvas.clear()
@@ -471,6 +438,7 @@ export default class Wallpaper {
     addCustomColorSliderListeners(this.toolbar)
     addWallpaperPropertyListener(this.canvas, this.thickness)
     addWindowResizeListener({
+      ctx: this.ctx,
       canvas: this.canvas,
       thickness: this.thickness,
       toolbar: this.toolbar
@@ -563,166 +531,14 @@ export default class Wallpaper {
     }
   }
 
-  handlePreviousPage() {
-    // Check if previous page exists
-    if (this.currentPageIndex === 0) return
+  resetToolbarState() {
+    this.usingEraser = false
+    this.usingSelectorTool = false
+    this.customEraserCursor.style.display = 'none'
 
-    this.canvas.clear()
-    this.pagePointStates[this.currentPageIndex] = [
-      ...this.canvas.getPointStateTimeline()
-    ]
-    this.currentPageIndex--
-
-    this.canvas.drawPoints({
-      cPoints: this.pagePointStates[this.currentPageIndex],
-      thickness: this.thickness,
-      movedLinesMapping: []
-    })
-    this.currentPageNum--
-    this.pageNumber.innerText = `${this.currentPageNum} of ${this.totalPages}`
-    saveCanvasData({
-      canvas: this.canvas,
-      pagePointStates: this.pagePointStates,
-      currentPageIndex: this.currentPageIndex,
-      totalPages: this.totalPages
-    })
-  }
-
-  handleNextPage() {
-    this.canvas.clear()
-    this.pagePointStates[this.currentPageIndex] = [
-      ...this.canvas.getPointStateTimeline()
-    ]
-    this.currentPageIndex++
-
-    if (this.pagePointStates[this.currentPageIndex]) {
-      this.canvas.drawPoints({
-        cPoints: this.pagePointStates[this.currentPageIndex],
-        thickness: this.thickness,
-        movedLinesMapping: []
-      })
-      this.canvas.setPointStateTimeline(
-        this.pagePointStates[this.currentPageIndex]
-      )
-    } else {
-      this.totalPages++
-      this.canvas.setPointStateTimeline([])
-    }
-    this.currentPageNum++
-    this.pageNumber.innerText = `${this.currentPageNum} of ${this.totalPages}`
-    saveCanvasData({
-      canvas: this.canvas,
-      pagePointStates: this.pagePointStates,
-      currentPageIndex: this.currentPageIndex,
-      totalPages: this.totalPages
-    })
-  }
-
-  handleToggleTheme() {
-    // Check if current background color is close to white
-    const isLightTheme =
-      COLORS.background.includes('255,255,255') ||
-      (COLORS.background.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/) &&
-        parseInt(RegExp.$1) > 200 &&
-        parseInt(RegExp.$2) > 200 &&
-        parseInt(RegExp.$3) > 200)
-
-    if (isLightTheme) {
-      // Switch to dark theme
-      this.toggleTheme.style.background = `url('./assets/moon.png')`
-      this.toggleTheme.style.backgroundRepeat = 'no-repeat'
-      COLORS.background = 'rgb(40,44,52)'
-    } else {
-      // Switch to light theme
-      this.toggleTheme.style.background = `url('./assets/sun1.png')`
-      this.toggleTheme.style.backgroundRepeat = 'no-repeat'
-      COLORS.background = 'rgb(255,255,255)'
-    }
-    this.canvas.clear()
-    this.canvas.drawPoints({
-      cPoints: this.canvas.getPointStateTimeline(),
-      thickness: this.thickness,
-      movedLinesMapping: []
-    })
-    saveCanvasData({
-      canvas: this.canvas,
-      pagePointStates: this.pagePointStates,
-      currentPageIndex: this.currentPageIndex,
-      totalPages: this.totalPages
-    })
-  }
-
-  handlePenLocked() {
-    this.isPenLocked = !this.isPenLocked
-
-    if (this.isPenLocked) {
-      this.penLock.style.background = `url('./assets/padlock.png')`
-      this.penLock.style.backgroundRepeat = 'no-repeat'
-    } else {
-      this.penLock.style.background = `url('./assets/open-padlock.png')`
-      this.penLock.style.backgroundRepeat = 'no-repeat'
-    }
-  }
-
-  handleUndo() {
-    this.canvas.undo(this.thickness)
-    saveCanvasData({
-      canvas: this.canvas,
-      pagePointStates: this.pagePointStates,
-      currentPageIndex: this.currentPageIndex,
-      totalPages: this.totalPages
-    })
-  }
-
-  handleSelector() {
-    this.minSelectedX = Math.min(
-      this.selectorStartPoint.x,
-      this.selectorEndPoint.x
-    )
-    this.maxSelectedX = Math.max(
-      this.selectorStartPoint.x,
-      this.selectorEndPoint.x
-    )
-    this.minSelectedY = Math.min(
-      this.selectorStartPoint.y,
-      this.selectorEndPoint.y
-    )
-    this.maxSelectedY = Math.max(
-      this.selectorStartPoint.y,
-      this.selectorEndPoint.y
-    )
-
-    // Save all points in the selected area
-    let numSelectionsCount = 0
-    for (let i = 0; i < this.canvas.getPointStateTimeline().length; i++) {
-      for (let point of this.canvas.getPointStateTimeline()[i]) {
-        if (
-          point.x >= this.minSelectedX &&
-          point.x <= this.maxSelectedX &&
-          point.y >= this.minSelectedY &&
-          point.y <= this.maxSelectedY
-        ) {
-          // If a line contains points in the selected area, add it to selectedLines array
-          // We must check if selectedLines already contains canvasPointStates[i], otherwise there will be an error
-          // Where there are duplicate lines, causing selectedLines size to double with each selection
-          if (
-            !this.selectedLines.some(
-              (line) =>
-                JSON.stringify(line) ===
-                JSON.stringify(this.canvas.getPointStateTimeline()[i])
-            )
-          ) {
-            this.selectedLines.push([...this.canvas.getPointStateTimeline()[i]])
-          }
-          this.movedLinesMapping.push({
-            originalLine: i,
-            movedLine:
-              this.canvas.getPointStateTimeline().length + numSelectionsCount
-          })
-          numSelectionsCount++
-          break // Currently if any pixel touches the selected area
-        }
-      }
+    if (this.previousButton) {
+      this.previousButton.style.backgroundColor =
+        COLORS[this.previousButton.id.split('-')[1]] ?? COLORS.customColor
     }
   }
 
@@ -765,5 +581,73 @@ export default class Wallpaper {
 
   getUsingEraser() {
     return this.usingEraser
+  }
+
+  getEraserThickness() {
+    return this.eraserThickness
+  }
+
+  getCanvas() {
+    return this.canvas
+  }
+
+  getPagePointStates() {
+    return this.pagePointStates
+  }
+
+  getCurrentPageIndex() {
+    return this.currentPageIndex
+  }
+
+  getTotalPages() {
+    return this.totalPages
+  }
+
+  getThickness() {
+    return this.thickness
+  }
+
+  getPageNumber() {
+    return this.pageNumber
+  }
+
+  getCurrentPageNum() {
+    return this.currentPageNum
+  }
+
+  setIsPenLocked(isPenLocked) {
+    this.isPenLocked = isPenLocked
+  }
+
+  getSelectorStartPoint() {
+    return this.selectorStartPoint
+  }
+
+  getSelectorEndPoint() {
+    return this.selectorEndPoint
+  }
+
+  getMovedLinesMapping() {
+    return this.movedLinesMapping
+  }
+
+  getSelectedLines() {
+    return this.selectedLines
+  }
+
+  setSelectedDimensions(
+    minSelectedX,
+    maxSelectedX,
+    minSelectedY,
+    maxSelectedY
+  ) {
+    this.minSelectedX = minSelectedX
+    this.maxSelectedX = maxSelectedX
+    this.minSelectedY = minSelectedY
+    this.maxSelectedY = maxSelectedY
+  }
+
+  setSelectedLines(selectedLines) {
+    this.selectedLines = selectedLines
   }
 }
