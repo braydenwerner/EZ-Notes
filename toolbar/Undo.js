@@ -9,16 +9,30 @@ export default class Undo {
     getThickness,
     resetToolbarState
   }) {
-    document.getElementById('undo').addEventListener('click', () => {
-      resetToolbarState()
+    this.getCanvas = getCanvas
+    this.getPagePointStates = getPagePointStates
+    this.getCurrentPageIndex = getCurrentPageIndex
+    this.getTotalPages = getTotalPages
+    this.getThickness = getThickness
+    this.resetToolbarState = resetToolbarState
 
-      getCanvas().undo(getThickness())
-      saveCanvasData({
-        canvas: getCanvas(),
-        pagePointStates: getPagePointStates(),
-        currentPageIndex: getCurrentPageIndex(),
-        totalPages: getTotalPages()
-      })
+    document.getElementById('undo').addEventListener('click', () => this.undo())
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'z') {
+        this.undo()
+      }
+    })
+  }
+
+  undo() {
+    this.resetToolbarState()
+
+    this.getCanvas().undo(this.getThickness())
+    saveCanvasData({
+      canvas: this.getCanvas(),
+      pagePointStates: this.getPagePointStates(),
+      currentPageIndex: this.getCurrentPageIndex(),
+      totalPages: this.getTotalPages()
     })
   }
 }
